@@ -1,6 +1,6 @@
-#Introduction
+#Introduction - v1.1
 The first goal of this project (CYCLOP+) is to add the ability to manually select channels using the single button on the receiver of the Quanum Cyclops.
-The second goal is to add a display to the receiver so that channel end frequency can be displayed.
+The second goal is to add a display to the receiver so that channel and frequency can be displayed.
 No hardware alteration is needed to run the firmware. Even if it is easier to program the receiver if you solder a standard ICSP pin header in place, you may be able to program by just temporarily pushing pins into the holes and then remove them. Neither is it necessary to attach a OLED screen. The screen is however a huge bonus and is recommended.
 
 ##Words of Warning
