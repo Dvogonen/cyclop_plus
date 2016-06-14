@@ -310,9 +310,8 @@ uint8_t bestChannelMatch( uint16_t frequency )
 //******************************************************************************
 //* function: graphicScanner
 //*         : scans the 5.8 GHz band in 3 MHz increments and draws a graphical
-//*         : representation. If the button is single pressed the currently
-//*         : scanned frequency is returned. All other click types return the
-//*         : scan start frequency
+//*         : representation. when the button is pressed the currently
+//*         : scanned frequency is returned.
 //******************************************************************************
 uint16_t graphicScanner( uint16_t frequency ) {
   uint8_t i;
@@ -321,7 +320,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
   uint16_t scanFrequency = frequency;
   uint16_t bestFrequency = frequency;
   uint8_t clickType;
-  uint8_t value;
+  uint8_t rssiDisplayValue;
 
   // Draw screen frame etc
   drawScannerScreen();
@@ -333,16 +332,11 @@ uint16_t graphicScanner( uint16_t frequency ) {
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = readRssi();
-    value = scanRssi / 10;      // Roughly 18 - 60
-    updateScannerScreen((FREQUENCY_MAX - scanFrequency) / 3, value );
+    rssiDisplayValue = (scanRssi - 140) / 10;    // Roughly 2 - 46
+    updateScannerScreen(100 - ((FREQUENCY_MAX - scanFrequency) / 3), rssiDisplayValue );
   }
-
-  if (clickType != SINGLE_CLICK )
-    return frequency;
-
   // Fine tuning
-  scanFrequency = bestFrequency - 20;
-  bestRssi = 0;
+  scanFrequency = scanFrequency - 20;
   for (i = 0; i < 20; i++, scanFrequency += 2) {
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
@@ -352,7 +346,6 @@ uint16_t graphicScanner( uint16_t frequency ) {
       bestFrequency = scanFrequency;
     }
   }
-
   // Return the best frequency
   setRTC6715Frequency(bestFrequency);
   return (bestFrequency);
@@ -706,36 +699,43 @@ void drawDialog( char *text ) {
 //******************************************************************************
 void drawScannerScreen( void ) {
   display.clearDisplay();
-  display.drawLine(0, 56, 127, 56, WHITE);
-  display.drawLine(101, 0, 101, 55, WHITE);
+  display.drawLine(0, 55, 127, 55, WHITE);
   updateScannerScreen(0, 0);
 }
 
 //******************************************************************************
 //* function: updateScannerScreen
 //*         : position = 0 to 99
-//*         : value = 0 to 55
+//*         : value = 0 to 53
 //******************************************************************************
 void updateScannerScreen(uint8_t position, uint8_t value ) {
-  static uint8_t errase_position = 0;
-  static uint8_t errase_value = 0;
+  uint8_t i;
+  static uint8_t errase_position = 14;
+  static uint8_t errase_value = 53;
+  position = position + 14;
   display.drawLine( errase_position, 0, errase_position, errase_value, BLACK );
-  display.fillRect(0, 57, 128, 7, BLACK);
+  display.drawLine( errase_position, errase_value + 1, errase_position, 53, WHITE );
+  display.fillRect(0, 56, 128, 8, BLACK);
   display.setTextColor(WHITE);
   display.setTextSize(1);
-  display.setCursor(0, 55);
-  display.print("5.645   5.800   5.945");
-  display.drawLine( position,      0, position,     63, WHITE );
+  display.setCursor(0, 57);
+  display.print("5.65     5.8     5.95");
+  for ( i = 0; i < 12; i++) {
+    display.drawLine( position, i * 4, position, i * 4 + 1, WHITE );
+    display.drawLine( position, i * 4 + 2, position, i * 4 + 3,  BLACK );
+  }
+  display.drawLine( position    , 55, position    , 63, WHITE );
   display.drawLine( position - 1, 58, position - 1, 63, WHITE );
   display.drawLine( position + 1, 58, position + 1, 63, WHITE );
   display.drawLine( position - 2, 60, position - 2, 63, WHITE );
   display.drawLine( position + 2, 60, position + 2, 63, WHITE );
   display.drawLine( position - 3, 62, position - 3, 63, WHITE );
   display.drawLine( position + 3, 62, position + 3, 63, WHITE );
+
   errase_position = position;
-  if (value > 55)
-    value = 55;
-  errase_value = 55 - value;
+  if (value > 53)
+    value = 53;
+  errase_value = 53 - value;
   display.display();
 }
 
