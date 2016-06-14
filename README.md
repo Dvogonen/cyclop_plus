@@ -1,4 +1,4 @@
-#You are viewing the development branch for the 1.2 version of CYCLOP+
+#This is the development branch for v1.2 of CYCLOP+. The latest "stable" release is in the master branch.
 
 #Introduction
 The first goal of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
