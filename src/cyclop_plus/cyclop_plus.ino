@@ -61,6 +61,9 @@ uint8_t previousChannel( uint8_t channel);
 uint8_t getClickType(uint8_t buttonPin);
 uint16_t autoScan( uint16_t frequency );
 uint8_t bestChannelMatch( uint16_t frequency );
+void drawScannerScreen( void );
+void updateScannerScreen(uint8_t position, uint8_t value );
+uint16_t graphicScanner( uint16_t frequency );
 #ifdef DEBUG
 void drawDebugScreen(char *t1, uint16_t i1, char *t2,  uint16_t i2, char *t3,  uint16_t i3 );
 #endif
@@ -152,8 +155,13 @@ void loop()
     case NO_CLICK: // do nothing
       break;
 
+    case LONG_LONG_CLICK: // graphical band scanner
+      currentChannel = bestChannelMatch(graphicScanner(getFrequency(currentChannel)));
+      drawChannelScreen(currentChannel, 0);
+      displayUpdateTimer = millis() +  RSSI_STABILITY_DELAY_MS ;
+      break;
+
     case LONG_CLICK:      // auto search
-    case LONG_LONG_CLICK: // auto search
       drawDialog( "SCANNING");
       currentChannel = bestChannelMatch(autoScan(getFrequency(currentChannel)));
       drawChannelScreen(currentChannel, 0);
@@ -296,6 +304,58 @@ uint8_t bestChannelMatch( uint16_t frequency )
     }
   }
   return bestChannel;
+}
+
+
+//******************************************************************************
+//* function: graphicScanner
+//*         : scans the 5.8 GHz band in 3 MHz increments and draws a graphical
+//*         : representation. If the button is single pressed the currently
+//*         : scanned frequency is returned. All other click types return the
+//*         : scan start frequency
+//******************************************************************************
+uint16_t graphicScanner( uint16_t frequency ) {
+  uint8_t i;
+  uint16_t scanRssi;
+  uint16_t bestRssi = 0;
+  uint16_t scanFrequency = frequency;
+  uint16_t bestFrequency = frequency;
+  uint8_t clickType;
+  uint8_t value;
+
+  // Draw screen frame etc
+  drawScannerScreen();
+
+  while ((clickType = getClickType(BUTTON_PIN)) == NO_CLICK) {
+    scanFrequency += 3;
+    if (scanFrequency > FREQUENCY_MAX)
+      scanFrequency = FREQUENCY_MIN;
+    setRTC6715Frequency(scanFrequency);
+    delay( RSSI_STABILITY_DELAY_MS );
+    scanRssi = readRssi();
+    value = scanRssi / 10;      // Roughly 18 - 60
+    updateScannerScreen((FREQUENCY_MAX - scanFrequency) / 3, value );
+  }
+
+  if (clickType != SINGLE_CLICK )
+    return frequency;
+
+  // Fine tuning
+  scanFrequency = bestFrequency - 20;
+  bestRssi = 0;
+  for (i = 0; i < 20; i++, scanFrequency += 2) {
+    setRTC6715Frequency(scanFrequency);
+    delay( RSSI_STABILITY_DELAY_MS );
+    scanRssi = readRssi();
+    if (bestRssi < scanRssi) {
+      bestRssi = scanRssi;
+      bestFrequency = scanFrequency;
+    }
+  }
+
+  // Return the best frequency
+  setRTC6715Frequency(bestFrequency);
+  return (bestFrequency);
 }
 
 //******************************************************************************
@@ -638,6 +698,44 @@ void drawDialog( char *text ) {
   display.setCursor(63 - width / 2 + 7, 31 - height / 2 + 7);
   display.setTextSize(2);
   display.print(text);
+  display.display();
+}
+
+//******************************************************************************
+//* function: drawScannerScreen
+//******************************************************************************
+void drawScannerScreen( void ) {
+  display.clearDisplay();
+  display.drawLine(0, 56, 127, 56, WHITE);
+  display.drawLine(101, 0, 101, 55, WHITE);
+  updateScannerScreen(0, 0);
+}
+
+//******************************************************************************
+//* function: updateScannerScreen
+//*         : position = 0 to 99
+//*         : value = 0 to 55
+//******************************************************************************
+void updateScannerScreen(uint8_t position, uint8_t value ) {
+  static uint8_t errase_position = 0;
+  static uint8_t errase_value = 0;
+  display.drawLine( errase_position, 0, errase_position, errase_value, BLACK );
+  display.fillRect(0, 57, 128, 7, BLACK);
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 55);
+  display.print("5.645   5.800   5.945");
+  display.drawLine( position,      0, position,     63, WHITE );
+  display.drawLine( position - 1, 58, position - 1, 63, WHITE );
+  display.drawLine( position + 1, 58, position + 1, 63, WHITE );
+  display.drawLine( position - 2, 60, position - 2, 63, WHITE );
+  display.drawLine( position + 2, 60, position + 2, 63, WHITE );
+  display.drawLine( position - 3, 62, position - 3, 63, WHITE );
+  display.drawLine( position + 3, 62, position + 3, 63, WHITE );
+  errase_position = position;
+  if (value > 55)
+    value = 55;
+  errase_value = 55 - value;
   display.display();
 }
 
