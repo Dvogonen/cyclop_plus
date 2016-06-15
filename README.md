@@ -1,20 +1,21 @@
-#This is the development branch for v1.2 of CYCLOP+. The latest "stable" release is in the master branch.
+#This is a development branch for CYCLOP+. The latest release is in the Master Branch
 
-#Introduction
+#CYCLOP+
+##Introduction and Goals
 The first goal of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
-The second goal is to add a display to the receiver so that The current channel and frequency can be displayed.
-No hardware alteration should be necessary to run the firmware. If you solder a standard ICSP pin header to the PCB it becomes easy to program the receiver. It is however possible to program by just temporarily pushing programming pins into the PCB holes and then remove them when the programming is done. Neither is it necessary to attach a OLED screen. The screen is however a huge bonus and is recommended.
+The second goal is to add support for connecting an OLED display to the receiver so that more information can be presented.
+No hardware alteration is necessary to use CYCLOPS+. The OLED display is optional.
 
 ##Words of Warning
-The project is in an early stage and there may be bugs that causes the receiver to fail without warning. Use of the FW is completely on your own risk.
-To install the firmware you remove the receiver from the googles and program it using a ICSP programmer. It is possible to destroy the electronics if you wire up the programmer incorrectly.
-It is most definitely possible to "Brick" your receiver module by tampering with the processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
+The project is in an early stage and use of the FW is completely on your own risk.
+To install the firmware you remove the receiver from the googles and program it using a ISP programmer. It is possible to destroy the receiver electronics if you connect VCC (the +3.3volt wire comming from the programmer) to the wrong pin. Other types of wiring errors will lead to the programmer not working, but will not destroy anything. Always double check that VCC is connected correctly before you turn on power.
+It is possible to "Brick" the processor in your receiver by tampering with the so called processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
 
-## Hardware modifications
-- (Optional)Solder a 2x3 block of pin headers into the ICSP port. This is found just under the button switch. The pins should point upwards on the same side as the receiver tin can is installed. The top right pin is VCC.
-- (Optional)Connect a 128x64 OLED screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). There are several pads available on the board, so you do not have to solder to the processor legs. The board designer was kind enough to add three pads just above the display contact that are (from the top) Ground, SCL and SDA. The OLED screens can use either 3.3 or 5 volts for VCC. I used 5 volts. The easiest point to find this is on the lowest pin on the main display contact. My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt. Please note that the pads on the back of the board marked SCL1 and SDA1 are mislabeled. They should be swapped. 
+## Modify the Hardware (optional)
+- Solder a 2x3 block of pin headers into the ICSP port. This is found just under the button switch. The pins should point upwards on the same side as the receiver tin can is installed. The top right pin is VCC. If you do not want to solder anything you can program the boad by temporarily pushing programming pins into the PCB ICSP connector holes and program the board.
+- Connect a 128x64 OLED screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). There are several pads available on the board, so you do not have to solder to the processor legs. The board designer was kind enough to add three pads just above the display contact that are (from the top) Ground, SCL and SDA. The OLED screens can use either 3.3 or 5 volts for VCC. I used 5 volts. The easiest point to find this is on the lowest pin on the main display contact. My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt. Please note that the pads on the back of the board marked SCL1 and SDA1 are mislabeled. They should be swapped. 
 
-##Building CYCLOP+
+##Build CYCLOP+ (optional)
 - The project is built using the Arduino development environment. Download the Arduino development environment from www.arduino.cc.
 - Install the development environment.
 - Download the CYCLOP+ source code from GitHub.
@@ -23,17 +24,20 @@ It is most definitely possible to "Brick" your receiver module by tampering with
 - Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the "Tool" menu.
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
-##Loading the FW
-- Upload the sketch to the receiver board using an ICSP programmer. There are several to choose from. USBASPs are probably the cheapest alternative. See to it to buy a version that is switchable between 3.3 and 5 volt.
-- Please note that you have to use the "Load with Programmer" menu option on the "Sketch" menu in the development environment. Pressing the upload arrow does _not_ work.
-- The receiver board has both 3.3-volt and 5-volt power rails. The processor and receiver is however 3.3v and the VCC feeds are connected so you should definitely use a 3.3v programmer. You might be able to get away with using a 5-volt programmer, but you may also fry the receiver, which would be bad.
-- The ICSP header of the board conforms to the standard 6 pin layout used for all Arduinos and most other Atmel Atmega hardware. Turn the board so that the tin can of the receiver is on the top side. The ICSP header is to the top right under the button switch. VCC is on the rightmost, upmost pin and MISO is on the leftmost, upmost pin.
+##Load CYCLOP+
+- Build CYCLOP+ or download the latest stable version of CYCLOP+ from here: 
+- To upload the sketch to the receiver board you must have an ISP programmer for AVR micro controllers. The original is called AVR ISP mkII and is expensive. The design is open source and copies can be had for around 20$. But there are several other cheaper alternatives available to choose from. An USBASP is the cheapest alternative (2-3$). If you decide to get a USBASP, make sure to select one that can be switched between 3.3-volt and 5-volt output. You can also build your own using an Arduino that has a USB interface, such as a One or a Nano. Build instructions are easy to find if you google around.
+- Install the drivers for the programmer. These are sometimes difficult to get to work. Be prepared for a bit of a fight and use google a lot. Google is your friend. For the USBASP driver you may have to use a helper program called Zadig to install the driver.
+- Configure the ISP programmer to use 3.3 volts.
+- The actual programming is done with a program called AVRDUDE (seriously). This is command line tool and is horrible to use. But there is a GUI version available called AVRDUDESS that is quite nice. You find it here: http://blog.zakkemble.co.uk/avrdudess-a-gui-for-avrdude/
+- Start AVRDUDESS. Select your ISP programmer in the Progrmmer box. Select the type of MCU (Atmega 328p). Select your CYCLOP+ firmware file in the Flash box and execute a write.
+- If everyting is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so. When it goes black again the porogramming is done and the board can be mounted in the googles.
 
-##Using the FW
-- A single click jumps upwards in frequency to the closest channel among the 40 available.
-- A double click jumps downward in frequency
-- A long click (0.6 - 1.5 seconds) triggers a autoscan for the best channel, just like a single click does on the original firmware.
-- A long-long click (>1.5 seconds) triggers a graphical frequency scanner (not yet implemented).
+##Use CYCLOP+
+- A single click jumps up in frequency to the closest channel among the 40 available.
+- A double click jumps down in frequency
+- A long click (0.6 - 2 seconds) triggers a autoscan for the best channel, just like a single click does in the original firmware.
+- A long-long click (> 2 seconds) triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Hold down the button again when the channel you want to use flickers onto the main display.
 
 ####License
 The MIT License (MIT)
