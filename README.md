@@ -25,7 +25,7 @@ It is possible to "Brick" the processor in your receiver by tampering with the s
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
 ##Load CYCLOP+
-- Build CYCLOP+ or download the latest stable version of CYCLOP+ from here: 
+- Build CYCLOP+ or download the latest stable version of CYCLOP+. The firmware file is called cyclop_plus.hex and can be downloaded from this page (right-click and download): https://github.com/Dvogonen/cyclops_plus
 - To upload the sketch to the receiver board you must have an ISP programmer for AVR micro controllers. The original is called AVR ISP mkII and is expensive. The design is open source and copies can be had for around 20$. But there are several other cheaper alternatives available to choose from. An USBASP is the cheapest alternative (2-3$). If you decide to get a USBASP, make sure to select one that can be switched between 3.3-volt and 5-volt output. You can also build your own using an Arduino that has a USB interface, such as a One or a Nano. Build instructions are easy to find if you google around.
 - Install the drivers for the programmer. These are sometimes difficult to get to work. Be prepared for a bit of a fight and use google a lot. Google is your friend. For the USBASP driver you may have to use a helper program called Zadig to install the driver.
 - Configure the ISP programmer to use 3.3 volts.
