@@ -43,33 +43,27 @@
 //******************************************************************************
 //* File scope function declarations
 
-void saveEeprom(uint8_t channel, uint16_t rssiMin, uint16_t rssi_max);
-bool readEeprom(uint8_t *channel, uint16_t *rssiMin, uint16_t *rssiMax);
-void setRTC6715Frequency(uint16_t frequency);
-void setReceiver(uint8_t receiver);
-uint16_t readRssi();
-uint16_t calcFrequencyData( uint16_t frequency );
-char *shortNameOfChannel(uint8_t channel, char *name);
-char *longNameOfChannel(uint8_t channel, char *name);
-void disolveDisplay(void);
-void flipDisplay();
-void drawStartScreen(void);
-void drawChannelScreen( uint8_t channel, uint16_t rssi);
-void drawDialog(char *text);
-uint8_t nextChannel( uint8_t channel);
-uint8_t previousChannel( uint8_t channel);
-uint8_t getClickType(uint8_t buttonPin);
 uint16_t autoScan( uint16_t frequency );
-uint8_t bestChannelMatch( uint16_t frequency );
-void drawScannerScreen( void );
-void updateScannerScreen(uint8_t position, uint8_t value );
+uint8_t  bestChannelMatch( uint16_t frequency );
+void     disolveDisplay(void);
+void     drawAutoScanScreen(void);
+void     drawChannelScreen( uint8_t channel, uint16_t rssi);
+void     drawScannerScreen( void );
+void     drawStartScreen(void);
+uint8_t  getClickType(uint8_t buttonPin);
 uint16_t graphicScanner( uint16_t frequency );
-#ifdef DEBUG
-void drawDebugScreen(char *t1, uint16_t i1, char *t2,  uint16_t i2, char *t3,  uint16_t i3 );
-#endif
+char    *longNameOfChannel(uint8_t channel, char *name);
+uint8_t  nextChannel( uint8_t channel);
+uint8_t  previousChannel( uint8_t channel);
+bool     readEeprom(uint8_t *channel, uint16_t *rssiMin, uint16_t *rssiMax);
+uint16_t readRssi();
+void     saveEeprom(uint8_t channel, uint16_t rssiMin, uint16_t rssi_max);
+char    *shortNameOfChannel(uint8_t channel, char *name);
+void     setRTC6715Frequency(uint16_t frequency);
+void     updateScannerScreen(uint8_t position, uint8_t value );
 
 //******************************************************************************
-//* Positions in the table above for the 40 channels
+//* Positions in the frequency table for the 40 channels
 //* Direct access via array operations does not work since data is stored in
 //* flash, not in RAM. Use getPosition to retrieve data
 
@@ -138,7 +132,7 @@ void setup()
 
   // Initialize and flip the display
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADR);
-  // display.setRotation(2);
+  display.setRotation(2);
 
   // Show start screen
   drawStartScreen();
@@ -162,7 +156,7 @@ void loop()
       break;
 
     case LONG_CLICK:      // auto search
-      drawDialog( "SCANNING");
+      drawAutoScanScreen();
       currentChannel = bestChannelMatch(autoScan(getFrequency(currentChannel)));
       drawChannelScreen(currentChannel, 0);
       displayUpdateTimer = millis() +  RSSI_STABILITY_DELAY_MS ;
@@ -306,7 +300,6 @@ uint8_t bestChannelMatch( uint16_t frequency )
   return bestChannel;
 }
 
-
 //******************************************************************************
 //* function: graphicScanner
 //*         : scans the 5.8 GHz band in 3 MHz increments and draws a graphical
@@ -381,7 +374,6 @@ uint16_t autoScan( uint16_t frequency ) {
       bestFrequency = scanFrequency;
     }
   }
-
   // Fine tuning
   scanFrequency = bestFrequency - 20;
   bestRssi = 0;
@@ -399,13 +391,12 @@ uint16_t autoScan( uint16_t frequency ) {
   setRTC6715Frequency(bestFrequency);
   return (bestFrequency);
 }
-
 //******************************************************************************
 //* function: readRssi
 //*         : returns an averaged rssi value between (in theory) 0 and 1024
 //*         : this function is called often, so it is speed optimized
 //******************************************************************************
-uint16_t readRssi()
+uint16_t readRssi(void)
 {
   uint16_t rssi = 0;
   uint8_t i = 32;
@@ -650,10 +641,10 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
 
   display.clearDisplay();
   display.setTextColor(WHITE);
-  display.setCursor(0, 0);
+  display.setCursor(10, 0);
   display.setTextSize(3);
   display.print(getFrequency(channel));
-  display.setCursor(64, 7);
+  display.setCursor(75, 7);
   display.setTextSize(2);
   display.print(" MHz");
   display.drawLine(0, 24, 127, 24, WHITE);
@@ -679,27 +670,36 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
 }
 
 //******************************************************************************
-//* function: drawDialog
-//*         : draw a floating dialog. 9 character maximum!!!
+//* function: drawAutoScanScreen
 //******************************************************************************
-void drawDialog( char *text ) {
-  uint8_t width = 5 + 2 + (strlen(text) * 12) + 5;
-  uint8_t height = 5 + 2 + 14 + 2 + 5;
-  display.fillRect(63 - width / 2, 31 - height / 2, width, height, BLACK);
-  display.fillRect(63 - width / 2 + 3 , 31 - height / 2 + 3, width - 6, height - 6, WHITE);
-  display.fillRect(63 - width / 2 + 5,  31 - height / 2 + 5, width - 10, height - 10, BLACK);
-  display.setCursor(63 - width / 2 + 7, 31 - height / 2 + 7);
+void drawAutoScanScreen( void ) {
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setCursor(10, 0);
+  display.setTextSize(3);
+  display.print("----");
+  display.setCursor(75, 7);
   display.setTextSize(2);
-  display.print(text);
+  display.print(" MHz");
+  display.drawLine(0, 24, 127, 24, WHITE);
+  display.setCursor(0, 27);
+  display.setTextSize(1);
+  display.print(" Channel     RSSI");
+  display.setCursor(0, 39);
+  display.setTextSize(2);
+  display.print(" SCANNING");
   display.display();
 }
-
 //******************************************************************************
 //* function: drawScannerScreen
 //******************************************************************************
 void drawScannerScreen( void ) {
   display.clearDisplay();
   display.drawLine(0, 55, 127, 55, WHITE);
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 57);
+  display.print("5.65     5.8     5.95");
   updateScannerScreen(0, 0);
 }
 
@@ -707,73 +707,28 @@ void drawScannerScreen( void ) {
 //* function: updateScannerScreen
 //*         : position = 0 to 99
 //*         : value = 0 to 53
+//*         : must be fast since there are frequent updates
 //******************************************************************************
 void updateScannerScreen(uint8_t position, uint8_t value ) {
-  uint8_t i;
-  static uint8_t errase_position = 14;
-  static uint8_t errase_value = 53;
+  // uint8_t i;
+  static uint8_t last_position = 14;
+  static uint8_t last_value = 0;
+
+  // The scan graph only uses the 100 positions in the middle of the screen
   position = position + 14;
-  display.drawLine( errase_position, 0, errase_position, errase_value, BLACK );
-  display.drawLine( errase_position, errase_value + 1, errase_position, 53, WHITE );
-  display.fillRect(0, 56, 128, 8, BLACK);
-  display.setTextColor(WHITE);
-  display.setTextSize(1);
-  display.setCursor(0, 57);
-  display.print("5.65     5.8     5.95");
-  for ( i = 0; i < 12; i++) {
-    display.drawLine( position, i * 4, position, i * 4 + 1, WHITE );
-    display.drawLine( position, i * 4 + 2, position, i * 4 + 3,  BLACK );
-  }
-  display.drawLine( position    , 55, position    , 63, WHITE );
-  display.drawLine( position - 1, 58, position - 1, 63, WHITE );
-  display.drawLine( position + 1, 58, position + 1, 63, WHITE );
-  display.drawLine( position - 2, 60, position - 2, 63, WHITE );
-  display.drawLine( position + 2, 60, position + 2, 63, WHITE );
-  display.drawLine( position - 3, 62, position - 3, 63, WHITE );
-  display.drawLine( position + 3, 62, position + 3, 63, WHITE );
 
-  errase_position = position;
+  // Errase the scan line from the last pass
+  display.drawFastVLine( last_position, 0, 54 - last_value, BLACK );
+
+  // Draw the current scan line
+  display.drawFastVLine( position, 0, 54, WHITE );
+
+  // Save position and value for the next pass
+  last_position = position;
   if (value > 53)
-    value = 53;
-  errase_value = 53 - value;
+    last_value = 53;
+  else
+    last_value = value;
   display.display();
 }
 
-//******************************************************************************
-//* function: drawDebugScreen
-//******************************************************************************
-#ifdef DEBUG
-void drawDebugScreen(char *t1, uint16_t i1, char *t2,  uint16_t i2, char *t3,  uint16_t i3 )
-{
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-  display.setTextSize(1);
-
-  if ( strlen(t1)) {
-    display.print(t1);
-    display.print(": ");
-    display.print(i1);
-    display.println();
-  }
-
-  if ( strlen(t2)) {
-    display.print(t2);
-    display.print(": ");
-    display.print(i2);
-    display.println();
-  }
-
-  if ( strlen(t3)) {
-    display.print(t3);
-    display.print(": ");
-    display.print(i3);
-    display.println();
-  }
-
-  display.display();
-
-  while (digitalRead(BUTTON_PIN) != BUTTON_PRESSED);
-  while (digitalRead(BUTTON_PIN) == BUTTON_PRESSED);
-}
-#endif // DEBUG

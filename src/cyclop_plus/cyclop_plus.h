@@ -46,10 +46,10 @@
 #define RSSI_PIN          A6
 
 // button debounce delay in ms
-#define DEBOUNCE_MS       150
+#define DEBOUNCE_MS       75
 
 // Minimum delay between setting a channel and trusting the RSSI values
-#define RSSI_STABILITY_DELAY_MS 50
+#define RSSI_STABILITY_DELAY_MS 25
 
 // RSSI threshold for accepting a channel
 #define RSSI_TRESHOLD     250
@@ -84,10 +84,7 @@
 #define OLED_I2C_ADR      0x3C
 
 // Relese information
-#define VER_DATE_STRING   "2016-06-15"
-#define VER_INFO_STRING   "v1.1 by Dvogonen"
-
-// Define DEBUG to use turn on debug prints
-//#define DEBUG             1
+#define VER_DATE_STRING   "2016-06-20"
+#define VER_INFO_STRING   "v1.2 by Dvogonen"
 
 #endif // cyclop_plus_h
