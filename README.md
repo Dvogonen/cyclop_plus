@@ -68,9 +68,9 @@ Google is your friend.
 For the USBASP driver you may have to use a helper program called Zadig to install the driver.
 - Set the programmer to 3.3 volts.
 - Connect the programmer to the ICSP contact on the receiver board. Neither the display nor the battery should be connected simultaneously.
-- The actual programming is done with a program called AVRDUDE (seriously).
+- The default programming tool from the processor manufacturer AVR is called AVRDUDE (seriously).
 This is command line tool and is horrible to use.
-But there is a GUI version available called AVRDUDESS that is quite nice.
+There is a GUI version available that is called AVRDUDESS. This program is quite nice, so I recommend it instead of the bare bones original.
 You find it here: http://blog.zakkemble.co.uk/avrdudess-a-gui-for-avrdude/
 - Start AVRDUDESS.
 Select your ISP programmer in the Programmer box.
