@@ -10,9 +10,10 @@ You have to dismantle the googles to program the receiver with a so called ISP (
 It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3volt wire comming from the programmer) to the wrong pin.
 Other types of wiring errors will lead to the programmer not working, but will probably not destroy anything.
 Always double check that VCC is connected correctly before you turn on power.
+
 It is possible to "Brick" the processor in your receiver by tampering with the so called processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
 
-###Modify the Hardware (optional)
+###Solder programming pins to the PCB(optional)
 - Solder a 2x3 block of pin headers into the holes for the ICSP port.
 If you do not want to solder anything you can program the boad by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
 The holes for the ICSP connector is found just to the right of the button switch.
@@ -20,9 +21,12 @@ The pins should point upwards on the same side as the receiver tin can is instal
 ![ICSP pin header](/images/pcb_icsp.jpg)
 The top left pin is VCC. 
  
-- Optionally connect an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
+###Attach an OLED display(optional)
+- Solder an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
 These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on ebay for around 5$.
+Do not buy one of the two-colored ones. 
+You want a black and white display without any missing lines (the two-colored displays have slight space between the two color fields).
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
 There are several pads available on the board, so you do not have to solder to the processor legs.
 The board designer was kind enough to add three pads just to the left of display contact that are (from the left) Ground, SDA and SCL.
@@ -45,7 +49,7 @@ Please note that if you instead want to connect to solder pads on the back of th
 
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
-The firmware file is called cyclop_plus.hex and can be downloaded from this page (right-click and download): https://github.com/Dvogonen/cyclops_plus
+The firmware file is called cyclop_plus.hex and can be downloaded from this page (right-click and download): https://github.com/Dvogonen/cyclop_plus
 - To upload the sketch to the receiver board you must have an ISP programmer for AVR micro controllers.
 The original is called AVR ISP mkII and is expensive.
 The design is open source and copies can be had for around 20$.
