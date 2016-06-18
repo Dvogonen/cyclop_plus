@@ -1,6 +1,4 @@
-##This is a development branch for CYCLOP+ v1.2. The latest release is in the Master Branch
-
-#CYCLOP+
+#CYCLOP+ v1.2
 ###Introduction and Goals
 The first goal of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second goal is to add support for connecting an OLED display to the receiver so that more information can be presented.
@@ -11,7 +9,8 @@ Use of the FW is completely on your own risk. You have to dismantle the googles 
 It is possible to "Brick" the processor in your receiver by tampering with the so called processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
 
 ###Modify the Hardware (optional)
-- Solder a 2x3 block of pin headers into the ICSP port. This is found just under the button switch. The pins should point upwards on the same side as the receiver tin can is installed. The top right pin is VCC. If you do not want to solder anything you can program the boad by temporarily pushing programming pins into the PCB ICSP connector holes and program the board.
+- Solder a 2x3 block of pin headers into the holes fro the ICSP port. This is found just under the button switch. The pins should point upwards on the same side as the receiver tin can is installed. The top right pin is VCC. If you do not want to solder anything you can program the boad by temporarily pushing programming pins into the PCB ICSP connector holes and program the board.
+![ICSP pin header](/images/pcb_icsp.jpg)
 - Connect a 128x64 OLED screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). There are several pads available on the board, so you do not have to solder to the processor legs. The board designer was kind enough to add three pads just above the display contact that are (from the top) Ground, SCL and SDA. The OLED screens can use either 3.3 or 5 volts for VCC. I used 5 volts. The easiest point to find this is on the lowest pin on the main display contact. My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt. Please note that the pads on the back of the board marked SCL1 and SDA1 are mislabeled. They should be swapped. 
 
 ###Build CYCLOP+ (optional)
