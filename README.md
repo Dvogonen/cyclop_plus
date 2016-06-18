@@ -51,9 +51,12 @@ The original is called AVR ISP mkII and is expensive.
 The design is open source and copies can be had for around 20$.
 But there are several other cheaper alternatives available to choose from.
 An USBASP is the cheapest alternative (2-3$).
-If you decide to get a USBASP, make sure to select one that can be switched between 3.3-volt and 5-volt output. This is done by moving a jumper often labled JP1. If there is no jumper on the USBAP, you should not buy it.
+If you decide to get a USBASP, make sure to select one that can be switched between 3.3-volt and 5-volt output.
+This is done by moving a jumper often labled JP1. If there is no jumper on the USBAP, you should not buy it.
 ![USBASP](/images/usbasp_and_adapter.jpg)
-You can also build your own ISCP programmer using an Arduino that has a USB interface, such as a One or a Nano. Build instructions are easy to find if you google around, but that is outside of the scope for this project.
+Almost all USBASPs come with a 10 wire flat cable with two 10 pin connectors.
+This means that you will need an adapter between the 10 pole connector and the 6 pin ISCP connector.
+These adaptors are also available on EBay and cost about as much as the USBASP.
 - Install the drivers for the programmer.
 These are sometimes difficult to get to work.
 Be prepared for a bit of a fight and use google a lot.
