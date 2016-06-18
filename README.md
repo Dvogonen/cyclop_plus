@@ -6,8 +6,8 @@ No hardware alteration is necessary to use CYCLOPS+. The OLED display is optiona
 
 ###Words of Warning
 Use of the FW is completely on your own risk.
-You have to dismantle the googles to program the receiver with a so called ISP (alternativle called ICSP) programmer.
-It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3volt wire comming from the programmer) to the wrong pin.
+You have to dismantle the googles to program the receiver with a so called ISP (alternatively called ICSP) programmer.
+It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3 volt wire coming from the programmer) to the wrong pin.
 Other types of wiring errors will lead to the programmer not working, but will probably not destroy anything.
 Always double check that VCC is connected correctly before you turn on power.
 
@@ -15,7 +15,7 @@ It is possible to "Brick" the processor in your receiver by tampering with the s
 
 ###Solder programming pins to the PCB(optional)
 - Solder a 2x3 block of pin headers into the holes for the ICSP port.
-If you do not want to solder anything you can program the boad by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
+If you do not want to solder anything you can program the board by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
 The holes for the ICSP connector is found just to the right of the button switch.
 The pins should point upwards on the same side as the receiver tin can is installed.
 ![ICSP pin header](/images/pcb_icsp.jpg)
@@ -24,7 +24,7 @@ The top left pin is VCC.
 ###Attach an OLED display(optional)
 - Solder an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
-These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on ebay for around 5$.
+These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on eBay for around 5$.
 Do not buy one of the two-colored ones. 
 You want a black and white display without any missing lines (the two-colored displays have slight space between the two color fields).
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
@@ -36,7 +36,7 @@ The easiest point to find this is on the rightmost pin of the main display conta
 My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt.
 If you would rather use 3.3 volt, there is an easily accessible pad next to the receiver module can.
 ![ICSP pin header](/images/pcb_33v_display.jpg)
-Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are misslabeled. They should be swapped. 
+Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
 
 ###Build CYCLOP+ (optional)
 - The project is built using the Arduino development environment. Download the Arduino development environment from www.arduino.cc.
@@ -56,11 +56,11 @@ The design is open source and copies can be had for around 20$.
 But there are several other cheaper alternatives available to choose from.
 An USBASP is the cheapest alternative (2-3$).
 If you decide to get a USBASP, make sure to select one that can be switched between 3.3-volt and 5-volt output.
-This is done by moving a jumper often labled JP1. If there is no jumper on the USBAP, you should not buy it.
+This is done by moving a jumper often labled JP1. If there is no jumper on the USBASP, you should not buy it.
 ![USBASP](/images/usbasp_and_adapter.jpg)
 Almost all USBASPs come with a 10 wire flat cable with two 10 pin connectors.
 This means that you will need an adapter between the 10 pole connector and the 6 pin ISCP connector.
-These adaptors are also available on EBay and cost about as much as the USBASP.
+These adapters are also available on eBay and cost about as much as the USBASP.
 - Install the drivers for the programmer.
 These are sometimes difficult to get to work.
 Be prepared for a bit of a fight and use google a lot.
@@ -76,7 +76,7 @@ You find it here: http://blog.zakkemble.co.uk/avrdudess-a-gui-for-avrdude/
 Select your ISP programmer in the Programmer box.
 Select the type of MCU (Atmega 328p).
 Select your CYCLOP+ firmware file in the Flash box and execute a write.
-- If everyting is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so.
+- If everything is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so.
 When it goes black again the programming is done and the board can be mounted in the googles.
 
 ###Use CYCLOP+
