@@ -18,24 +18,24 @@ It is possible to "Brick" the processor in your receiver by tampering with the s
 If you do not want to solder anything you can program the board by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
 The holes for the ICSP connector is found just to the right of the button switch.
 The pins should point upwards on the same side as the receiver tin can is installed.
-![ICSP pin header](/images/pcb_icsp.jpg)
+![ICSP pin header](http://dvogonen.github.io/cyclop_plus/images/images/pcb_icsp.jpg)
 The top left pin is VCC. 
  
 ###Attach an OLED display(optional)
 - Solder an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
-![128x64 OLED with I2C interface](/images/oled.jpg)
+![128x64 OLED with I2C interface](http://dvogonen.github.io/cyclop_plus/images/images/oled.jpg)
 These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on eBay for around 5$.
 Do not buy one of the two-colored ones. 
 You want a black and white display without any missing lines (the two-colored displays have slight space between the two color fields).
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
 There are several pads available on the board, so you do not have to solder to the processor legs.
 The board designer was kind enough to add three pads just to the left of display contact that are (from the left) Ground, SDA and SCL.
-![ICSP pin header](/images/pcb_5v_display.jpg)
+![ICSP pin header](http://dvogonen.github.io/cyclop_plus/images/images/pcb_5v_display.jpg)
 The OLED screens can use either 3.3 or 5 volts for VCC. I used 5 volts.
 The easiest point to find this is on the rightmost pin of the main display contact.
 My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt.
 If you would rather use 3.3 volt, there is an easily accessible pad next to the receiver module can.
-![ICSP pin header](/images/pcb_33v_display.jpg)
+![ICSP pin header](http://dvogonen.github.io/cyclop_plus/images/images/pcb_33v_display.jpg)
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
 
 ###Build CYCLOP+ (optional)
@@ -57,7 +57,7 @@ But there are several other cheaper alternatives available to choose from.
 An USBASP is the cheapest alternative (2-3$).
 If you decide to get a USBASP, make sure to select one that can be switched between 3.3-volt and 5-volt output.
 This is done by moving a jumper often labled JP1. If there is no jumper on the USBASP, you should not buy it.
-![USBASP](/images/usbasp_and_adapter.jpg)
+![USBASP](http://dvogonen.github.io/cyclop_plus/images/images/usbasp_and_adapter.jpg)
 Almost all USBASPs come with a 10 wire flat cable with two 10 pin connectors.
 This means that you will need an adapter between the 10 pole connector and the 6 pin ISCP connector.
 These adapters are also available on eBay and cost about as much as the USBASP.
