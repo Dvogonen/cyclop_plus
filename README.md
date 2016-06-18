@@ -49,7 +49,7 @@ Please note that if you instead want to connect to solder pads on the back of th
 
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
-The firmware file is called cyclop_plus.hex and can be downloaded from this page (right-click and download): https://github.com/Dvogonen/cyclop_plus
+The firmware file is called cyclop_plus.hex and can be downloaded via this link https://github.com/Dvogonen/cyclop_plus/blob/master/cyclop_plus.hex (right-click and download)
 - To upload the sketch to the receiver board you must have an ISP programmer for AVR micro controllers.
 The original is called AVR ISP mkII and is expensive.
 The design is open source and copies can be had for around 20$.
