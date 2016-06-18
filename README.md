@@ -67,6 +67,7 @@ Be prepared for a bit of a fight and use google a lot.
 Google is your friend.
 For the USBASP driver you may have to use a helper program called Zadig to install the driver.
 - Set the programmer to 3.3 volts.
+- Connect the programmer to the ICSP contact on the receiver board. Neither the display nor the battery should be connected simultaneously.
 - The actual programming is done with a program called AVRDUDE (seriously).
 This is command line tool and is horrible to use.
 But there is a GUI version available called AVRDUDESS that is quite nice.
