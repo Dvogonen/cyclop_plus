@@ -14,16 +14,18 @@ This is found just under the button switch.
 The pins should point upwards on the same side as the receiver tin can is installed.
 ![ICSP pin header](/images/pcb_icsp.jpg)
  The top right pin is VCC. If you do not want to solder anything you can program the boad by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
-- Connect a 128x64 OLED screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
+ 
+- Connect an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
 There are several pads available on the board, so you do not have to solder to the processor legs.
-The board designer was kind enough to add three pads just above the display contact that are (from the top) Ground, SCL and SDA.
-![ICSP pin header](/images/pcb_33v_display.jpg)
+The board designer was kind enough to add three pads just to the left of display contact that are (from the left) Ground, SCL and SDA.
+![ICSP pin header](/images/pcb_5v_display.jpg)
 The OLED screens can use either 3.3 or 5 volts for VCC. I used 5 volts.
-The easiest point to find this is on the lowest pin on the main display contact.
+The easiest point to find this is on the rightmost pin of the main display contact.
 My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt.
-If you would rather use 3.3 volt, there is an easily accessible pad next to the receiver.
+If you would rather use 3.3 volt, there is an easily accessible pad next to the receiver module can.
 ![ICSP pin header](/images/pcb_33v_display.jpg)
-Please note that if you use the the pads on the back of the board marked SCL1 and SDA1, these are mislabeled. They should be swapped. 
+Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
+
 
 ###Build CYCLOP+ (optional)
 - The project is built using the Arduino development environment. Download the Arduino development environment from www.arduino.cc.
