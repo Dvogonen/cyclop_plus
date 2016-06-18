@@ -18,13 +18,12 @@ If you do not want to solder anything you can program the boad by temporarily pu
 The holes for the ICSP connector is found just to the right of the button switch.
 The pins should point upwards on the same side as the receiver tin can is installed.
 ![ICSP pin header](/images/pcb_icsp.jpg)
-The top right pin is VCC. 
+The top left pin is VCC. 
  
 - Optionally connect an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
 These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on ebay for around 5$.
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
-
 There are several pads available on the board, so you do not have to solder to the processor legs.
 The board designer was kind enough to add three pads just to the left of display contact that are (from the left) Ground, SDA and SCL.
 ![ICSP pin header](/images/pcb_5v_display.jpg)
