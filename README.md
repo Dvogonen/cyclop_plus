@@ -55,10 +55,12 @@ Please note that if you instead want to connect to solder pads on the back of th
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
 The firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus.hex (right-click and download)
-Check the format of the downloaded file. Each line should start with a ":". Each line should be of equal lenght. It should look something like this:
+Check the format of the downloaded file. Each line should start with a colon character. Each line should be of equal lenght. It should look something like this:
 
 :100000000C941F030C9447030C9447030C94470370
+
 :100010000C9447030C9447030C9447030C94470338
+
 :100020000C9447030C9447030C9447030C94470328
 
 - To upload the sketch to the receiver board you must have an ISP programmer for AVR micro controllers.
@@ -87,7 +89,7 @@ You find it here: http://blog.zakkemble.co.uk/avrdudess-a-gui-for-avrdude/
 Select your ISP programmer in the Programmer box.
 Select the type of MCU (Atmega 328p).
 Select your CYCLOP+ firmware file in the Flash box.
-Select "intel Hex" as format in the Flash box.
+Select "Intel Hex" as format in the Flash box.
 Execute a write.
 - If everything is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so.
 When it goes black again the programming is done and the board can be mounted in the googles.
