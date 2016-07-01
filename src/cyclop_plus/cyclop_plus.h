@@ -28,10 +28,28 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
+*******************************************************************************
+ Version History
+ 1.0 Initial dev version, not released
+ 1.1 Functionly complete dev version, not released
+ 1.2 Timing optimizations. First released version 2016-06-20
+ 1.3 Configration options added
 *******************************************************************************/
 
 #ifndef cyclop_plus_h
 #define cyclop_plus_h
+
+// User Configuration Options
+#define FLIP_SCREEN_OPTION        0
+#define LIPO_2S_METER_OPTION      1
+#define LIPO_3S_METER_OPTION      2
+#define BATTERY_9V_METER_OPTION   3
+#define BATTERY_ALARM_OPTION      4
+#define SHOW_STARTSCREEN_OPTION   5
+
+#define MAX_OPTIONS               6
+// End of User Configuration Options
+
 // This definition is used by the ADAFRUIT library
 #define OLED_128x64_ADAFRUIT_SCREENS
 
@@ -64,6 +82,7 @@
 
 //EEPROM addresses
 #define EEPROM_CHANNEL    0
+#define EEPROM_OPTIONS    1
 
 // click types
 #define NO_CLICK          0
@@ -83,8 +102,8 @@
 //#define OLED_I2C_ADR      0x2C
 #define OLED_I2C_ADR      0x3C
 
-// Relese information
-#define VER_DATE_STRING   "2016-06-20"
-#define VER_INFO_STRING   "v1.2 by Dvogonen"
+// Release information
+#define VER_DATE_STRING   "2016-07-10"
+#define VER_INFO_STRING   "v1.3 by Dvogonen"
 
 #endif // cyclop_plus_h

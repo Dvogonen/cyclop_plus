@@ -44,10 +44,13 @@
 //* File scope function declarations
 
 uint16_t autoScan( uint16_t frequency );
+void     batteryMeter(void);
 uint8_t  bestChannelMatch( uint16_t frequency );
 void     disolveDisplay(void);
 void     drawAutoScanScreen(void);
+void     drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value );
 void     drawChannelScreen( uint8_t channel, uint16_t rssi);
+void     drawOptionsScreen(uint8_t option );
 void     drawScannerScreen( void );
 void     drawStartScreen(void);
 uint8_t  getClickType(uint8_t buttonPin);
@@ -55,12 +58,13 @@ uint16_t graphicScanner( uint16_t frequency );
 char    *longNameOfChannel(uint8_t channel, char *name);
 uint8_t  nextChannel( uint8_t channel);
 uint8_t  previousChannel( uint8_t channel);
-bool     readEeprom(uint8_t *channel, uint16_t *rssiMin, uint16_t *rssiMax);
+bool     readEeprom(void);
 uint16_t readRssi();
-void     saveEeprom(uint8_t channel, uint16_t rssiMin, uint16_t rssi_max);
 char    *shortNameOfChannel(uint8_t channel, char *name);
 void     setRTC6715Frequency(uint16_t frequency);
+void     setOptions( void );
 void     updateScannerScreen(uint8_t position, uint8_t value );
+void     writeEeprom(void);
 
 //******************************************************************************
 //* Positions in the frequency table for the 40 channels
@@ -103,6 +107,7 @@ uint8_t ledState = LED_ON;
 unsigned long displayUpdateTimer = 0;
 unsigned long eepromSaveTimer = 0;
 unsigned long pulseTimer = 0;
+uint8_t options[MAX_OPTIONS];
 
 //******************************************************************************
 //* function: setup
@@ -122,20 +127,35 @@ void setup()
   pinMode (SPI_DATA_PIN, OUTPUT);
   pinMode (SPI_CLOCK_PIN, OUTPUT);
 
+  // Read data from EEPROM
+  readEeprom();
+
   // Initialize channel
-  readEeprom( &currentChannel );
   if (currentChannel > CHANNEL_MAX)
     currentChannel = CHANNEL_MIN;
 
   // Start receiver
   setRTC6715Frequency(getFrequency(currentChannel));
 
-  // Initialize and flip the display
+  // Initialize the display
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADR);
-  display.setRotation(2);
+  display.clearDisplay();
+  if (options[FLIP_SCREEN_OPTION])
+    display.setRotation(2);
+  display.display();
+
+  // Set Options
+  if (getClickType( BUTTON_PIN ) != NO_CLICK ) {
+    setOptions();
+    writeEeprom();
+    if (options[FLIP_SCREEN_OPTION])
+      display.setRotation(2);
+  }
 
   // Show start screen
-  drawStartScreen();
+  if (options[SHOW_STARTSCREEN_OPTION])
+    drawStartScreen();
+
   return;
 }
 
@@ -184,7 +204,7 @@ void loop()
   // Check if EEPROM needs a save. Reduce EEPROM writes by not saving to often
   if ((currentChannel != lastChannel) && (millis() > eepromSaveTimer))
   {
-    saveEeprom( currentChannel );
+    writeEeprom();
     lastChannel = currentChannel;
     eepromSaveTimer = millis() + 10000;
   }
@@ -198,17 +218,23 @@ void loop()
 }
 
 //******************************************************************************
-//* function: saveEeprom
+//* function: writeEeprom
 //******************************************************************************
-void saveEeprom(uint8_t channel) {
-  EEPROM.write(EEPROM_CHANNEL, channel);
+void writeEeprom(void) {
+  uint8_t i;
+  EEPROM.write(EEPROM_CHANNEL, currentChannel);
+  for (i = 0; i < MAX_OPTIONS; i++)
+    EEPROM.write(EEPROM_OPTIONS + i, options[i]);
 }
 
 //******************************************************************************
 //* function: readEeprom
 //******************************************************************************
-bool readEeprom(uint8_t *channel) {
-  *channel =   EEPROM.read(EEPROM_CHANNEL);
+bool readEeprom(void) {
+  uint8_t i;
+  currentChannel =   EEPROM.read(EEPROM_CHANNEL);
+  for (i = 0; i < MAX_OPTIONS; i++)
+    options[i] = EEPROM.read(EEPROM_OPTIONS+i);
 }
 
 //******************************************************************************
@@ -574,6 +600,53 @@ void spiEnableHigh()
 }
 
 //******************************************************************************
+//* function: batteryMeter
+//******************************************************************************
+void batteryMeter( void)
+{
+  drawBattery(58, 32, 50);
+}
+
+//******************************************************************************
+//* function: setOptions
+//******************************************************************************
+void setOptions()
+{
+  uint8_t option = 0;
+  uint8_t click = NO_CLICK;;
+  while (click != LONG_LONG_CLICK)
+  {
+    drawOptionsScreen( option );
+    click = getClickType( BUTTON_PIN );
+    switch ( click )
+    {
+      case NO_CLICK:        // do nothing
+        break;
+
+      case LONG_LONG_CLICK: // Exit
+        break;
+
+      case SINGLE_CLICK:    // Move to next option
+        option++;
+        if (option >= MAX_OPTIONS)
+          option = 0;
+        break;
+
+      case DOUBLE_CLICK:    // Move to previous option
+        if (option == 0)
+          option = MAX_OPTIONS - 1;
+        else
+          option--;
+        break;
+
+      case LONG_CLICK:     // toggle current option
+        options[option] = !options[option];
+        break;
+    }
+  }
+}
+
+//******************************************************************************
 //* Screen functions
 //******************************************************************************
 //******************************************************************************
@@ -611,13 +684,13 @@ void drawStartScreen( void ) {
   display.setTextColor(WHITE);
   display.setCursor(1, 4);
   display.setTextSize(3);
-  display.print("CYCLOP+");
+  display.print(F("CYCLOP+"));
   display.drawLine(0, 27, 127, 27, WHITE);
   display.setCursor(15, 35);
   display.setTextSize(1);
-  display.print(VER_INFO_STRING);
+  display.print(F(VER_INFO_STRING));
   display.setCursor(33, 50);
-  display.print(VER_DATE_STRING);
+  display.print(F(VER_DATE_STRING));
   display.display();
 
   // Return after 2000 ms or when button is pressed
@@ -646,26 +719,28 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
   display.print(getFrequency(channel));
   display.setCursor(75, 7);
   display.setTextSize(2);
-  display.print(" MHz");
+  display.print(F(" MHz"));
   display.drawLine(0, 24, 127, 24, WHITE);
   display.setCursor(0, 27);
   display.setTextSize(1);
-  display.print(" Channel     RSSI");
+  display.print(F("  Channel    RSSI"));
   display.setCursor(0, 39);
   display.setTextSize(2);
-  display.print(" ");
-  display.print(" ");
+  display.print(F(" "));
+  display.print(F(" "));
   display.print(shortNameOfChannel(channel, buffer));
-  display.print("  ");
+  display.print(F("  "));
   display.print(rssi);
   display.setCursor(0, 57);
   display.setTextSize(1);
   longNameOfChannel(channel, buffer);
   i = (21 - strlen(buffer)) / 2;
   for (; i; i--) {
-    display.print(" ");
+    display.print(F(" "));
   }
   display.print( buffer );
+  if (options[LIPO_2S_METER_OPTION] || options[LIPO_3S_METER_OPTION] || options[BATTERY_9V_METER_OPTION] )
+    batteryMeter();
   display.display();
 }
 
@@ -677,17 +752,16 @@ void drawAutoScanScreen( void ) {
   display.setTextColor(WHITE);
   display.setCursor(10, 0);
   display.setTextSize(3);
-  display.print("----");
+  display.print(F("SCAN"));
   display.setCursor(75, 7);
   display.setTextSize(2);
-  display.print(" MHz");
+  display.print(F(" MHz"));
   display.drawLine(0, 24, 127, 24, WHITE);
   display.setCursor(0, 27);
   display.setTextSize(1);
-  display.print(" Channel     RSSI");
-  display.setCursor(0, 39);
-  display.setTextSize(2);
-  display.print(" SCANNING");
+  display.print(F("  Channel    RSSI"));
+  if (options[LIPO_2S_METER_OPTION] || options[LIPO_3S_METER_OPTION] || options[BATTERY_9V_METER_OPTION] )
+    batteryMeter();
   display.display();
 }
 //******************************************************************************
@@ -699,7 +773,7 @@ void drawScannerScreen( void ) {
   display.setTextColor(WHITE);
   display.setTextSize(1);
   display.setCursor(0, 57);
-  display.print("5.65     5.8     5.95");
+  display.print(F("5.65     5.8     5.95"));
   updateScannerScreen(0, 0);
 }
 
@@ -732,3 +806,58 @@ void updateScannerScreen(uint8_t position, uint8_t value ) {
   display.display();
 }
 
+//******************************************************************************
+//* function: drawBattery
+//*         : value = 0 to 100
+//******************************************************************************
+void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
+  display.drawRect(3 + xPos,  0 + yPos, 4, 2, WHITE);
+  display.drawRect(0 + xPos, 2 + yPos, 10, 20, WHITE);
+  display.drawRect(2 + xPos,  4 + yPos, 6, 16, BLACK);
+  if (value > 95)
+    display.drawRect(3 + xPos,  5 + yPos, 4, 2, WHITE);
+  if (value > 75)
+    display.drawRect(3 + xPos,  8 + yPos, 4, 2, WHITE);
+  if (value > 55)
+    display.drawRect(3 + xPos,  11 + yPos, 4, 2, WHITE);
+  if (value > 35)
+    display.drawRect(3 + xPos, 14 + yPos, 4, 2, WHITE);
+  if (value > 15)
+    display.drawRect(3 + xPos, 17 + yPos, 4, 2, WHITE);
+}
+
+//******************************************************************************
+//* function: drawOptionsScreen
+//******************************************************************************
+void drawOptionsScreen(uint8_t option ) {
+  uint8_t i;
+  display.clearDisplay();
+  display.fillRect(0, 0, 128, 11, WHITE);
+  display.setTextColor(BLACK);
+  display.setTextSize(1);
+  display.setCursor(2, 2);
+  display.print(F("Options Config"));
+  display.setCursor(0, 14);
+  display.setTextColor(WHITE);
+  for (i = 0; i < MAX_OPTIONS; i++)
+  {
+    if (i == option)
+      display.print(F(">"));
+    else
+      display.print(F(" "));
+    switch (i) {
+      case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
+      case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
+      case LIPO_3S_METER_OPTION:     display.print(F("LiPo 3s Meter   ")); break;
+      case BATTERY_9V_METER_OPTION:  display.print(F("Battery 9v Meter")); break;
+      case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
+      case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
+    }
+    if (options[i % MAX_OPTIONS])
+      display.print(F(" ON"));
+    else
+      display.print(F(" OFF"));
+    display.println();
+  }
+  display.display();
+}
