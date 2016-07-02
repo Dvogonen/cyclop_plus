@@ -47,20 +47,34 @@
 #define BATTERY_ALARM_OPTION      4
 #define SHOW_STARTSCREEN_OPTION   5
 
+#define FLIP_SCREEN_DEFAULT       1
+#define LIPO_2S_METER_DEFAULT     0
+#define LIPO_3S_METER_DEFAULT     0
+#define BATTERY_9V_METER_DEFAULT  0
+#define BATTERY_ALARM_DEFAULT     0
+#define SHOW_STARTSCREEN_DEFAULT  1
+
 #define MAX_OPTIONS               6
-// End of User Configuration Options
+
+// Option Dialog Defines
+#define EXIT_COMMAND              6
+#define RESET_SETTINGS_COMMAND    7
+
+#define MAX_COMMANDS              2
+#define MAX_OPTION_LINES          6
 
 // This definition is used by the ADAFRUIT library
 #define OLED_128x64_ADAFRUIT_SCREENS
 
 // Digital pin definitions
-#define BUTTON_PIN        5
-#define SPI_DATA_PIN      4
-#define SLAVE_SELECT_PIN  3
 #define SPI_CLOCK_PIN     2
+#define SLAVE_SELECT_PIN  3
+#define SPI_DATA_PIN      4
+#define BUTTON_PIN        5
 #define LED_PIN           13
 
 // Analog pin definitions
+#define VOLTAGE_METER_PIN A1
 #define RSSI_PIN          A6
 
 // button debounce delay in ms
@@ -83,6 +97,7 @@
 //EEPROM addresses
 #define EEPROM_CHANNEL    0
 #define EEPROM_OPTIONS    1
+#define EEPROM_CHECK      (EEPROM_OPTIONS + MAX_OPTIONS)
 
 // click types
 #define NO_CLICK          0

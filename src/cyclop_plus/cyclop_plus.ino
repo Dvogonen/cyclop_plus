@@ -60,6 +60,7 @@ uint8_t  nextChannel( uint8_t channel);
 uint8_t  previousChannel( uint8_t channel);
 bool     readEeprom(void);
 uint16_t readRssi();
+void     resetOptions(void);
 char    *shortNameOfChannel(uint8_t channel, char *name);
 void     setRTC6715Frequency(uint16_t frequency);
 void     setOptions( void );
@@ -114,8 +115,8 @@ uint8_t options[MAX_OPTIONS];
 //******************************************************************************
 void setup()
 {
-  // initialize led pinb
-  pinMode(LED_PIN, OUTPUT); // status pin
+  // initialize LED pin
+  pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LED_ON);
 
   // initialize button pin
@@ -127,12 +128,11 @@ void setup()
   pinMode (SPI_DATA_PIN, OUTPUT);
   pinMode (SPI_CLOCK_PIN, OUTPUT);
 
-  // Read data from EEPROM
-  readEeprom();
-
-  // Initialize channel
-  if (currentChannel > CHANNEL_MAX)
+  // Read current channel and options data from EEPROM
+  if (!readEeprom()) {
     currentChannel = CHANNEL_MIN;
+    resetOptions();
+  }
 
   // Start receiver
   setRTC6715Frequency(getFrequency(currentChannel));
@@ -145,13 +145,12 @@ void setup()
   display.display();
 
   // Set Options
-  if (getClickType( BUTTON_PIN ) != NO_CLICK ) {
+  if (digitalRead(BUTTON_PIN) == BUTTON_PRESSED ) {
     setOptions();
     writeEeprom();
     if (options[FLIP_SCREEN_OPTION])
       display.setRotation(2);
   }
-
   // Show start screen
   if (options[SHOW_STARTSCREEN_OPTION])
     drawStartScreen();
@@ -218,6 +217,19 @@ void loop()
 }
 
 //******************************************************************************
+//* function: resetOptions
+//*         : All options are reset to their default values
+//******************************************************************************
+void resetOptions(void) {
+  options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
+  options[LIPO_2S_METER_OPTION]    = LIPO_2S_METER_DEFAULT;
+  options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
+  options[BATTERY_9V_METER_OPTION] = BATTERY_9V_METER_DEFAULT;
+  options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
+  options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
+}
+
+//******************************************************************************
 //* function: writeEeprom
 //******************************************************************************
 void writeEeprom(void) {
@@ -225,6 +237,7 @@ void writeEeprom(void) {
   EEPROM.write(EEPROM_CHANNEL, currentChannel);
   for (i = 0; i < MAX_OPTIONS; i++)
     EEPROM.write(EEPROM_OPTIONS + i, options[i]);
+  EEPROM.write(EEPROM_CHECK, 238);
 }
 
 //******************************************************************************
@@ -232,9 +245,12 @@ void writeEeprom(void) {
 //******************************************************************************
 bool readEeprom(void) {
   uint8_t i;
+  if (EEPROM.read(EEPROM_CHECK) != 238)
+    return false;
   currentChannel =   EEPROM.read(EEPROM_CHANNEL);
   for (i = 0; i < MAX_OPTIONS; i++)
-    options[i] = EEPROM.read(EEPROM_OPTIONS+i);
+    options[i] = EEPROM.read(EEPROM_OPTIONS + i);
+  return true;
 }
 
 //******************************************************************************
@@ -612,11 +628,15 @@ void batteryMeter( void)
 //******************************************************************************
 void setOptions()
 {
-  uint8_t option = 0;
-  uint8_t click = NO_CLICK;;
+  uint8_t menuSelection = 0;
+  uint8_t click = NO_CLICK;
+
+  // Let the user release the button
+  getClickType( BUTTON_PIN );
+
   while (click != LONG_LONG_CLICK)
   {
-    drawOptionsScreen( option );
+    drawOptionsScreen( menuSelection );
     click = getClickType( BUTTON_PIN );
     switch ( click )
     {
@@ -627,20 +647,25 @@ void setOptions()
         break;
 
       case SINGLE_CLICK:    // Move to next option
-        option++;
-        if (option >= MAX_OPTIONS)
-          option = 0;
+        menuSelection++;
+        if (menuSelection >= MAX_OPTIONS + MAX_COMMANDS)
+          menuSelection = 0;
         break;
 
       case DOUBLE_CLICK:    // Move to previous option
-        if (option == 0)
-          option = MAX_OPTIONS - 1;
+        if (menuSelection == 0)
+          menuSelection = MAX_OPTIONS + MAX_COMMANDS - 1;
         else
-          option--;
+          menuSelection--;
         break;
 
       case LONG_CLICK:     // toggle current option
-        options[option] = !options[option];
+        if (menuSelection == EXIT_COMMAND)
+          click = LONG_LONG_CLICK;
+        else if (menuSelection == RESET_SETTINGS_COMMAND)
+          resetOptions();
+        else
+          options[menuSelection] = !options[menuSelection];
         break;
     }
   }
@@ -830,7 +855,7 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
 //* function: drawOptionsScreen
 //******************************************************************************
 void drawOptionsScreen(uint8_t option ) {
-  uint8_t i;
+  uint8_t i, j;
   display.clearDisplay();
   display.fillRect(0, 0, 128, 11, WHITE);
   display.setTextColor(BLACK);
@@ -839,24 +864,30 @@ void drawOptionsScreen(uint8_t option ) {
   display.print(F("Options Config"));
   display.setCursor(0, 14);
   display.setTextColor(WHITE);
-  for (i = 0; i < MAX_OPTIONS; i++)
+  for (i = 0, j = option; i < MAX_OPTION_LINES; i++, j++)
   {
-    if (i == option)
+    if (j >= (MAX_OPTIONS + MAX_COMMANDS))
+      j = 0;
+    if (j == option)
       display.print(F(">"));
     else
       display.print(F(" "));
-    switch (i) {
+    switch (j) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
       case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
       case LIPO_3S_METER_OPTION:     display.print(F("LiPo 3s Meter   ")); break;
       case BATTERY_9V_METER_OPTION:  display.print(F("Battery 9v Meter")); break;
       case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
       case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
+      case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
+      case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
-    if (options[i % MAX_OPTIONS])
-      display.print(F(" ON"));
-    else
-      display.print(F(" OFF"));
+    if (j < MAX_OPTIONS) {
+      if (options[j])
+        display.print(F(" ON"));
+      else
+        display.print(F(" OFF"));
+    }
     display.println();
   }
   display.display();
