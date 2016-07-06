@@ -28,6 +28,12 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
+*******************************************************************************
+ Version History
+ 1.0 Initial dev version, not released
+ 1.1 Functionly complete dev version, not released
+ 1.2 Timing optimizations. First released version. 2016-06-20
+ 1.3 Configration options added. Screensaver mode added. Not released yet
 *******************************************************************************/
 
 // Library includes
@@ -50,6 +56,7 @@ void     disolveDisplay(void);
 void     drawAutoScanScreen(void);
 void     drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value );
 void     drawChannelScreen( uint8_t channel, uint16_t rssi);
+void     drawEmptyScreen( void );
 void     drawOptionsScreen(uint8_t option );
 void     drawScannerScreen( void );
 void     drawStartScreen(void);
@@ -101,10 +108,12 @@ uint16_t getFrequency( uint8_t channel ) {
 //******************************************************************************
 //* Other file scope variables
 Adafruit_SSD1306 display(4);
+uint8_t lastClick = NO_CLICK;
 uint8_t currentChannel = 0;
 uint8_t lastChannel = 0;
 uint16_t currentRssi = 0;
 uint8_t ledState = LED_ON;
+unsigned long saveScreenTimer;
 unsigned long displayUpdateTimer = 0;
 unsigned long eepromSaveTimer = 0;
 unsigned long pulseTimer = 0;
@@ -155,6 +164,9 @@ void setup()
   if (options[SHOW_STARTSCREEN_OPTION])
     drawStartScreen();
 
+  // Wait at least the delay time before entering screen save mode
+  saveScreenTimer = millis() + SAVE_SCREEN_DELAY_MS;
+
   return;
 }
 
@@ -163,7 +175,7 @@ void setup()
 //******************************************************************************
 void loop()
 {
-  switch (getClickType( BUTTON_PIN ))
+  switch (lastClick = getClickType( BUTTON_PIN ))
   {
     case NO_CLICK: // do nothing
       break;
@@ -193,11 +205,19 @@ void loop()
       drawChannelScreen(currentChannel, 0);
       break;
   }
+  // Reset screensaver timer after key click
+  if  (lastClick != NO_CLICK )
+    saveScreenTimer = millis() + SAVE_SCREEN_DELAY_MS;
+
   // Check if the display needs updating
   if ( millis() > displayUpdateTimer ) {
-    currentRssi = readRssi();
-    drawChannelScreen(currentChannel, currentRssi);
-    displayUpdateTimer = millis() + 1000;
+    if ( options[SAVE_SCREEN_OPTION] && (saveScreenTimer < millis()))
+      drawEmptyScreen();
+    else
+    { currentRssi = readRssi();
+      drawChannelScreen(currentChannel, currentRssi);
+      displayUpdateTimer = millis() + 1000;
+    }
   }
 
   // Check if EEPROM needs a save. Reduce EEPROM writes by not saving to often
@@ -227,6 +247,7 @@ void resetOptions(void) {
   options[BATTERY_9V_METER_OPTION] = BATTERY_9V_METER_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
+  options[SAVE_SCREEN_OPTION]       = SAVE_SCREEN_DEFAULT;
 }
 
 //******************************************************************************
@@ -464,7 +485,7 @@ char *shortNameOfChannel(uint8_t channel, char *name)
   else if (channelIndex < 32)
     name[0] = 'F';
   else
-    name[0] = 'C';
+    name[0] = 'R';
   name[1] = (channelIndex % 8) + '0' + 1;
   name[2] = 0;
   return name;
@@ -879,6 +900,7 @@ void drawOptionsScreen(uint8_t option ) {
       case BATTERY_9V_METER_OPTION:  display.print(F("Battery 9v Meter")); break;
       case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
       case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
+      case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
       case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
@@ -892,3 +914,13 @@ void drawOptionsScreen(uint8_t option ) {
   }
   display.display();
 }
+
+//******************************************************************************
+//* function: drawEmptyScreen
+//******************************************************************************
+void drawEmptyScreen( void)
+{
+  display.clearDisplay();
+  display.display();
+}
+

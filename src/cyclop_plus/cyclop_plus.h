@@ -28,16 +28,12 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
-*******************************************************************************
- Version History
- 1.0 Initial dev version, not released
- 1.1 Functionly complete dev version, not released
- 1.2 Timing optimizations. First released version 2016-06-20
- 1.3 Configration options added
 *******************************************************************************/
-
 #ifndef cyclop_plus_h
 #define cyclop_plus_h
+
+// This definition is used by the ADAFRUIT library
+#define OLED_128x64_ADAFRUIT_SCREENS
 
 // User Configuration Options
 #define FLIP_SCREEN_OPTION        0
@@ -46,6 +42,7 @@
 #define BATTERY_9V_METER_OPTION   3
 #define BATTERY_ALARM_OPTION      4
 #define SHOW_STARTSCREEN_OPTION   5
+#define SAVE_SCREEN_OPTION        6   
 
 #define FLIP_SCREEN_DEFAULT       1
 #define LIPO_2S_METER_DEFAULT     0
@@ -53,18 +50,20 @@
 #define BATTERY_9V_METER_DEFAULT  0
 #define BATTERY_ALARM_DEFAULT     0
 #define SHOW_STARTSCREEN_DEFAULT  1
+#define SAVE_SCREEN_DEFAULT       0
 
-#define MAX_OPTIONS               6
+#define MAX_OPTIONS               7
 
-// Option Dialog Defines
-#define EXIT_COMMAND              6
-#define RESET_SETTINGS_COMMAND    7
-
+// User Configuration Commands
+#define EXIT_COMMAND              7
+#define RESET_SETTINGS_COMMAND    8
 #define MAX_COMMANDS              2
+
+// Number of lines in configuration menu
 #define MAX_OPTION_LINES          6
 
-// This definition is used by the ADAFRUIT library
-#define OLED_128x64_ADAFRUIT_SCREENS
+// Delay after key click before screen save (in milli seconds)
+#define SAVE_SCREEN_DELAY_MS      10000
 
 // Digital pin definitions
 #define SPI_CLOCK_PIN     2
