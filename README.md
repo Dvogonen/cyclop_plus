@@ -48,7 +48,8 @@ Please note that if you instead want to connect to solder pads on the back of th
 - Install the development environment.
 - Download the CYCLOP+ source code from GitHub.
 - Navigate to the cyclop_plus.ino file and open it in the Arduino development environment.
-- Download the two external LCD libraries (Adafruit GFX and Adafruit SSD1306). This is done within the Arduino environment. 
+- Download the two external LCD libraries (Adafruit GFX and Adafruit SSD1306). This is done within the Arduino environment.
+- Select display type by editing Adafruit_SSD1306.h. Look at line 69 in the file.
 - Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the "Tool" menu.
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
