@@ -29,11 +29,11 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 *******************************************************************************
- Version History
- 1.0 Initial dev version, not released
- 1.1 Functionly complete dev version, not released
- 1.2 Timing optimizations. First released version. 2016-06-20
- 1.3 Configration options added. Screensaver mode added. Not released yet
+  Version History
+  1.0 Initial dev version, not released
+  1.1 Functionly complete dev version, not released
+  1.2 Timing optimizations. First released version. 2016-06-20
+  1.3 Configration options added. Screensaver mode added. Not released yet
 *******************************************************************************/
 
 // Library includes
@@ -50,6 +50,7 @@
 //* File scope function declarations
 
 uint16_t autoScan( uint16_t frequency );
+uint16_t averageAnalogRead( uint8_t pin );
 void     batteryMeter(void);
 uint8_t  bestChannelMatch( uint16_t frequency );
 void     disolveDisplay(void);
@@ -66,7 +67,6 @@ char    *longNameOfChannel(uint8_t channel, char *name);
 uint8_t  nextChannel( uint8_t channel);
 uint8_t  previousChannel( uint8_t channel);
 bool     readEeprom(void);
-uint16_t readRssi();
 void     resetOptions(void);
 char    *shortNameOfChannel(uint8_t channel, char *name);
 void     setRTC6715Frequency(uint16_t frequency);
@@ -214,7 +214,8 @@ void loop()
     if ( options[SAVE_SCREEN_OPTION] && (saveScreenTimer < millis()))
       drawEmptyScreen();
     else
-    { currentRssi = readRssi();
+    {
+      currentRssi = averageAnalogRead(RSSI_PIN);
       drawChannelScreen(currentChannel, currentRssi);
       displayUpdateTimer = millis() + 1000;
     }
@@ -387,7 +388,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
       scanFrequency = FREQUENCY_MIN;
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
-    scanRssi = readRssi();
+    scanRssi = averageAnalogRead(RSSI_PIN);
     rssiDisplayValue = (scanRssi - 140) / 10;    // Roughly 2 - 46
     updateScannerScreen(100 - ((FREQUENCY_MAX - scanFrequency) / 3), rssiDisplayValue );
   }
@@ -396,7 +397,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
   for (i = 0; i < 20; i++, scanFrequency += 2) {
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
-    scanRssi = readRssi();
+    scanRssi = averageAnalogRead(RSSI_PIN);
     if (bestRssi < scanRssi) {
       bestRssi = scanRssi;
       bestFrequency = scanFrequency;
@@ -431,7 +432,7 @@ uint16_t autoScan( uint16_t frequency ) {
       scanFrequency = FREQUENCY_MIN;
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
-    scanRssi = readRssi();
+    scanRssi = averageAnalogRead(RSSI_PIN);
     if (bestRssi < scanRssi) {
       bestRssi = scanRssi;
       bestFrequency = scanFrequency;
@@ -443,7 +444,7 @@ uint16_t autoScan( uint16_t frequency ) {
   for (i = 0; i < 20; i++, scanFrequency += 2) {
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
-    scanRssi = readRssi();
+    scanRssi = averageAnalogRead(RSSI_PIN);
     if (bestRssi < scanRssi) {
       bestRssi = scanRssi;
       bestFrequency = scanFrequency;
@@ -455,17 +456,17 @@ uint16_t autoScan( uint16_t frequency ) {
   return (bestFrequency);
 }
 //******************************************************************************
-//* function: readRssi
-//*         : returns an averaged rssi value between (in theory) 0 and 1024
+//* function: averageAnalogRead
+//*         : returns an averaged value between (in theory) 0 and 1024
 //*         : this function is called often, so it is speed optimized
 //******************************************************************************
-uint16_t readRssi(void)
+uint16_t averageAnalogRead( uint8_t pin)
 {
   uint16_t rssi = 0;
   uint8_t i = 32;
 
   for ( ; i ; i--) {
-    rssi += analogRead(RSSI_PIN);
+    rssi += analogRead(pin);
   }
   return (rssi >> 5);
 }
@@ -638,10 +639,49 @@ void spiEnableHigh()
 
 //******************************************************************************
 //* function: batteryMeter
+//*         : Voltage values calculated for 22K/68K voltage divider
+//*         : 3s LiPo
+//*         : max = 4.2v * 3 = 12.6v * 22/90 = 3.08 / 3.3v * 1023 = 955
+//*         : min = 3.6v * 3 = 10.8v * 22/90 = 2.64 / 3.3v * 1023 = 818
+//*         : 9v Dry Cell
+//*         : max =               9v * 22/90 = 2.20 / 3.3v * 1023 = 682
+//*         : min =               7v * 22/90 = 1.71 / 3.3v * 1023 = 530
+//*         : 2s LiPo
+//*         : max = 4.2v * 2 =  8.4v * 22/90 = 2.05 / 3.3v * 1023 = 636
+//*         : min = 3.6v * 2 =  7.2v * 22/90 = 1.76 / 3.3v * 1023 = 546
 //******************************************************************************
-void batteryMeter( void)
+void batteryMeter( void )
 {
-  drawBattery(58, 32, 50);
+  uint16_t voltage;
+  uint8_t value;
+  uint8_t min;
+  uint8_t max;
+
+  // Do not vaste time if the meter is not displayed
+  if (!options[LIPO_3S_METER_OPTION] && !options[LIPO_2S_METER_OPTION] && !options[BATTERY_9V_METER_OPTION])
+    return;
+
+  if (options[LIPO_3S_METER_OPTION]) {
+    min = 955;
+    max = 818;
+  }
+  else if (options[BATTERY_9V_METER_OPTION]) {
+    min = 682;
+    max = 530;
+  }
+  else if (options[LIPO_2S_METER_OPTION]) {
+    min = 636;
+    max = 546;
+  }
+  voltage = averageAnalogRead(VOLTAGE_METER_PIN);
+  if (voltage >= max)
+    value = 100;
+  else if (voltage <= min)
+    value = 0;
+  else
+    value = (voltage - min) / (max - min) * 100;
+
+  drawBattery(58, 32, value);
 }
 
 //******************************************************************************
@@ -649,22 +689,23 @@ void batteryMeter( void)
 //******************************************************************************
 void setOptions()
 {
+  uint8_t exitNow = false;
   uint8_t menuSelection = 0;
   uint8_t click = NO_CLICK;
+
+  // Display option screen
+  drawOptionsScreen( menuSelection );
 
   // Let the user release the button
   getClickType( BUTTON_PIN );
 
-  while (click != LONG_LONG_CLICK)
+  while ( !exitNow )
   {
     drawOptionsScreen( menuSelection );
     click = getClickType( BUTTON_PIN );
     switch ( click )
     {
       case NO_CLICK:        // do nothing
-        break;
-
-      case LONG_LONG_CLICK: // Exit
         break;
 
       case SINGLE_CLICK:    // Move to next option
@@ -680,9 +721,10 @@ void setOptions()
           menuSelection--;
         break;
 
-      case LONG_CLICK:     // toggle current option
+      case LONG_CLICK:     // Execute command or toggle option
+      case LONG_LONG_CLICK:
         if (menuSelection == EXIT_COMMAND)
-          click = LONG_LONG_CLICK;
+          exitNow = true;
         else if (menuSelection == RESET_SETTINGS_COMMAND)
           resetOptions();
         else
@@ -785,8 +827,7 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
     display.print(F(" "));
   }
   display.print( buffer );
-  if (options[LIPO_2S_METER_OPTION] || options[LIPO_3S_METER_OPTION] || options[BATTERY_9V_METER_OPTION] )
-    batteryMeter();
+  batteryMeter();
   display.display();
 }
 
@@ -806,10 +847,10 @@ void drawAutoScanScreen( void ) {
   display.setCursor(0, 27);
   display.setTextSize(1);
   display.print(F("  Channel    RSSI"));
-  if (options[LIPO_2S_METER_OPTION] || options[LIPO_3S_METER_OPTION] || options[BATTERY_9V_METER_OPTION] )
-    batteryMeter();
+  batteryMeter();
   display.display();
 }
+
 //******************************************************************************
 //* function: drawScannerScreen
 //******************************************************************************
@@ -885,6 +926,7 @@ void drawOptionsScreen(uint8_t option ) {
   display.print(F("Options Config"));
   display.setCursor(0, 14);
   display.setTextColor(WHITE);
+
   for (i = 0, j = option; i < MAX_OPTION_LINES; i++, j++)
   {
     if (j >= (MAX_OPTIONS + MAX_COMMANDS))
