@@ -43,11 +43,11 @@
 #define SHOW_STARTSCREEN_OPTION   4
 #define SAVE_SCREEN_OPTION        5   
 
-#define FLIP_SCREEN_DEFAULT       0
+#define FLIP_SCREEN_DEFAULT       1
 #define LIPO_2S_METER_DEFAULT     0
 #define LIPO_3S_METER_DEFAULT     1
 #define BATTERY_ALARM_DEFAULT     0
-#define SHOW_STARTSCREEN_DEFAULT  0
+#define SHOW_STARTSCREEN_DEFAULT  1
 #define SAVE_SCREEN_DEFAULT       0
 
 #define MAX_OPTIONS               6

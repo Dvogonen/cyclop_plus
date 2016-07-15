@@ -1,13 +1,20 @@
-#CYCLOP+ v1.2
+#CYCLOP+ v1.3
+###New features in v1.3:
+- Holding the button during power up brings up an options screen
+- The screen can be flipped in either direction from the options screen
+- A battery meter for 3s batteries can be turned on in the options screen
+- A battery meter for 2s batteries can be turned on in the options screen
+- A screen saver can be turned on in the options screen (after 10 seconds of inactivity the screen goes blank)
+
 ###Introduction and Goals
 The first goal of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second goal is to add support for connecting an OLED display to the receiver so that more information can be presented.
 No hardware alteration is necessary to use CYCLOPS+. The OLED display is optional.
-This is a video introduction to the functionality:
+This is a video introduction to the functionality (of v1.2):
 https://youtu.be/mDhL1hS-EHk
 
-This is a longer video in which a modified Cyclops visor is demonstrated and programmed in two different ways:
-https://youtu.be/BkZLAH78Ecg
+This is a longer video (for v1.2) in which a modified Cyclops visor is demonstrated and programmed in two different ways:
+https://youtu.be/C4XgYwpNXS0
 
 ###Words of Warning
 Use of the FW is completely on your own risk.
