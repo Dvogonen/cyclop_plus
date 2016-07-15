@@ -39,24 +39,22 @@
 #define FLIP_SCREEN_OPTION        0
 #define LIPO_2S_METER_OPTION      1
 #define LIPO_3S_METER_OPTION      2
-#define BATTERY_9V_METER_OPTION   3
-#define BATTERY_ALARM_OPTION      4
-#define SHOW_STARTSCREEN_OPTION   5
-#define SAVE_SCREEN_OPTION        6   
+#define BATTERY_ALARM_OPTION      3
+#define SHOW_STARTSCREEN_OPTION   4
+#define SAVE_SCREEN_OPTION        5   
 
-#define FLIP_SCREEN_DEFAULT       1
+#define FLIP_SCREEN_DEFAULT       0
 #define LIPO_2S_METER_DEFAULT     0
-#define LIPO_3S_METER_DEFAULT     0
-#define BATTERY_9V_METER_DEFAULT  0
+#define LIPO_3S_METER_DEFAULT     1
 #define BATTERY_ALARM_DEFAULT     0
-#define SHOW_STARTSCREEN_DEFAULT  1
+#define SHOW_STARTSCREEN_DEFAULT  0
 #define SAVE_SCREEN_DEFAULT       0
 
-#define MAX_OPTIONS               7
+#define MAX_OPTIONS               6
 
 // User Configuration Commands
-#define EXIT_COMMAND              7
-#define RESET_SETTINGS_COMMAND    8
+#define EXIT_COMMAND              6
+#define RESET_SETTINGS_COMMAND    7
 #define MAX_COMMANDS              2
 
 // Number of lines in configuration menu
@@ -117,7 +115,7 @@
 #define OLED_I2C_ADR      0x3C
 
 // Release information
-#define VER_DATE_STRING   "2016-07-10"
+#define VER_DATE_STRING   "2016-07-15"
 #define VER_INFO_STRING   "v1.3 by Dvogonen"
 
 #endif // cyclop_plus_h

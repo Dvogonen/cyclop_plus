@@ -33,7 +33,7 @@
   1.0 Initial dev version, not released
   1.1 Functionly complete dev version, not released
   1.2 Timing optimizations. First released version. 2016-06-20
-  1.3 Configration options added. Screensaver mode added. Not released yet
+  1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
 *******************************************************************************/
 
 // Library includes
@@ -245,7 +245,6 @@ void resetOptions(void) {
   options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
   options[LIPO_2S_METER_OPTION]    = LIPO_2S_METER_DEFAULT;
   options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
-  options[BATTERY_9V_METER_OPTION] = BATTERY_9V_METER_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
   options[SAVE_SCREEN_OPTION]       = SAVE_SCREEN_DEFAULT;
@@ -639,47 +638,45 @@ void spiEnableHigh()
 
 //******************************************************************************
 //* function: batteryMeter
-//*         : Voltage values calculated for 22K/68K voltage divider
+//*         : Measured voltage values 
 //*         : 3s LiPo
-//*         : max = 4.2v * 3 = 12.6v * 22/90 = 3.08 / 3.3v * 1023 = 955
-//*         : min = 3.6v * 3 = 10.8v * 22/90 = 2.64 / 3.3v * 1023 = 818
-//*         : 9v Dry Cell
-//*         : max =               9v * 22/90 = 2.20 / 3.3v * 1023 = 682
-//*         : min =               7v * 22/90 = 1.71 / 3.3v * 1023 = 530
+//*         : max = 4.2v * 3 = 12.6v = 643
+//*         : min = 3.6v * 3 = 10.8v = 551
 //*         : 2s LiPo
-//*         : max = 4.2v * 2 =  8.4v * 22/90 = 2.05 / 3.3v * 1023 = 636
-//*         : min = 3.6v * 2 =  7.2v * 22/90 = 1.76 / 3.3v * 1023 = 546
+//*         : max = 4.2v * 2 = 8.4v = 429
+//*         : min = 3.6v * 2 = 7.2v = 367
 //******************************************************************************
 void batteryMeter( void )
 {
   uint16_t voltage;
   uint8_t value;
-  uint8_t min;
-  uint8_t max;
+  uint16_t minV;
+  uint16_t maxV;
 
-  // Do not vaste time if the meter is not displayed
-  if (!options[LIPO_3S_METER_OPTION] && !options[LIPO_2S_METER_OPTION] && !options[BATTERY_9V_METER_OPTION])
+  // Do no calculations if the meter should not be displayed
+  if (!options[LIPO_3S_METER_OPTION] && !options[LIPO_2S_METER_OPTION])
     return;
 
   if (options[LIPO_3S_METER_OPTION]) {
-    min = 955;
-    max = 818;
+    minV = 551;
+    maxV = 643;
   }
-  else if (options[BATTERY_9V_METER_OPTION]) {
-    min = 682;
-    max = 530;
+  if (options[LIPO_2S_METER_OPTION]) {
+    minV = 367;
+    maxV = 429;
   }
-  else if (options[LIPO_2S_METER_OPTION]) {
-    min = 636;
-    max = 546;
-  }
-  voltage = averageAnalogRead(VOLTAGE_METER_PIN);
-  if (voltage >= max)
-    value = 100;
-  else if (voltage <= min)
+  voltage = averageAnalogRead(VOLTAGE_METER_PIN); 
+
+  if (voltage >= maxV)
+    value = 99;
+  else if (voltage <= minV)
     value = 0;
   else
-    value = (voltage - min) / (max - min) * 100;
+    value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);   
+      
+  display.setCursor(80, 39);  
+  display.setTextSize(2);
+  display.print(value); 
 
   drawBattery(58, 32, value);
 }
@@ -818,7 +815,8 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
   display.print(F(" "));
   display.print(shortNameOfChannel(channel, buffer));
   display.print(F("  "));
-  display.print(rssi);
+// display.print(rssi);
+// display.print((float)averageAnalogRead(VOLTAGE_METER_PIN)*0.0196);
   display.setCursor(0, 57);
   display.setTextSize(1);
   longNameOfChannel(channel, buffer);
@@ -939,7 +937,6 @@ void drawOptionsScreen(uint8_t option ) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
       case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
       case LIPO_3S_METER_OPTION:     display.print(F("LiPo 3s Meter   ")); break;
-      case BATTERY_9V_METER_OPTION:  display.print(F("Battery 9v Meter")); break;
       case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
       case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
       case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
