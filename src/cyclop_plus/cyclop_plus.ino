@@ -673,10 +673,6 @@ void batteryMeter( void )
     value = 0;
   else
     value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);   
-      
-  display.setCursor(80, 39);  
-  display.setTextSize(2);
-  display.print(value); 
 
   drawBattery(58, 32, value);
 }
@@ -815,8 +811,7 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
   display.print(F(" "));
   display.print(shortNameOfChannel(channel, buffer));
   display.print(F("  "));
-// display.print(rssi);
-// display.print((float)averageAnalogRead(VOLTAGE_METER_PIN)*0.0196);
+  display.print(rssi);
   display.setCursor(0, 57);
   display.setTextSize(1);
   longNameOfChannel(channel, buffer);
