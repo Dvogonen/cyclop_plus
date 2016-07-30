@@ -10,6 +10,8 @@
 The first goal of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second goal is to add support for connecting an OLED display to the receiver so that more information can be presented.
 No hardware alteration is necessary to use CYCLOPS+. The OLED display is optional.
+
+###Links
 This is a short video introduction to the functionality (of v1.2):
 https://youtu.be/mDhL1hS-EHk
 
