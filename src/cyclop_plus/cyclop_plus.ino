@@ -111,6 +111,11 @@ unsigned long saveScreenTimer;
 unsigned long displayUpdateTimer = 0;
 unsigned long eepromSaveTimer = 0;
 unsigned long pulseTimer = 0;
+unsigned long alarmTimer = 0;
+uint8_t alarmState = ALARM_OFF;
+uint8_t alarmSound = 0;
+uint8_t alarmOnPeriod = 0;
+uint8_t alarmOffPeriod = 0;
 uint8_t options[MAX_OPTIONS];
 
 //******************************************************************************
@@ -125,6 +130,9 @@ void setup()
   // initialize button pin
   pinMode(BUTTON_PIN, INPUT);
   digitalWrite(BUTTON_PIN, INPUT_PULLUP);
+
+  // initialize alarm
+  pinMode(ALARM_PIN, OUTPUT );
 
   // SPI pins for RX control
   pinMode (SLAVE_SELECT_PIN, OUTPUT);
@@ -229,6 +237,21 @@ void loop()
     pulseTimer = millis() + 500;
   }
   digitalWrite(LED_PIN, ledState);
+
+  // Toggle alarm on or off
+  if (options[BATTERY_ALARM_OPTION] && alarmState) {
+    if (millis() > alarmTimer) {
+      alarmSound = !alarmSound;
+      if (alarmSound) {
+        analogWrite( ALARM_PIN, 128 );
+        alarmTimer = millis() + alarmOnPeriod;
+      }
+      else {
+        analogWrite( ALARM_PIN, 0 );
+        alarmTimer = millis() + alarmOffPeriod;
+      }
+    }
+  }
 }
 
 //******************************************************************************
@@ -632,7 +655,7 @@ void spiEnableHigh()
 
 //******************************************************************************
 //* function: batteryMeter
-//*         : Measured voltage values 
+//*         : Measured voltage values
 //*         : 3s LiPo
 //*         : max = 4.2v * 3 = 12.6v = 643
 //*         : min = 3.6v * 3 = 10.8v = 551
@@ -659,14 +682,25 @@ void batteryMeter( void )
     minV = 367;
     maxV = 429;
   }
-  voltage = averageAnalogRead(VOLTAGE_METER_PIN); 
+  voltage = averageAnalogRead(VOLTAGE_METER_PIN);
 
   if (voltage >= maxV)
     value = 99;
   else if (voltage <= minV)
     value = 0;
   else
-    value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);   
+    value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);
+
+  // Set alarm state and period constants
+  alarmState = ALARM_OFF; 
+  alarmOnPeriod = 1000;
+  alarmOffPeriod = 1000;
+  if (value < 5)
+    { alarmState = ALARM_MAX; alarmOnPeriod = ALARM_MAX_ON;  alarmOffPeriod = ALARM_MAX_OFF; }
+  else if (value < 10)
+    { alarmState = ALARM_MED; alarmOnPeriod = ALARM_MED_ON; alarmOffPeriod = ALARM_MED_OFF; }
+  else if (value < 20)
+    { alarmState = ALARM_MIN; alarmOnPeriod = ALARM_MIN_ON; alarmOffPeriod = ALARM_MIN_OFF; }
 
   drawBattery(58, 32, value);
 }

@@ -63,11 +63,24 @@
 // Delay after key click before screen save (in milli seconds)
 #define SAVE_SCREEN_DELAY_MS      10000
 
+// Alarm timing constants (in milli seconds)
+#define ALARM_OFF         0
+#define ALARM_MIN         1
+#define ALARM_MED         2
+#define ALARM_MAX         3
+#define ALARM_MAX_ON      200
+#define ALARM_MED_ON      200
+#define ALARM_MIN_ON      200
+#define ALARM_MAX_OFF     200
+#define ALARM_MED_OFF     1000
+#define ALARM_MIN_OFF     3000
+
 // Digital pin definitions
 #define SPI_CLOCK_PIN     2
 #define SLAVE_SELECT_PIN  3
 #define SPI_DATA_PIN      4
 #define BUTTON_PIN        5
+#define ALARM_PIN         9
 #define LED_PIN           13
 
 // Analog pin definitions
