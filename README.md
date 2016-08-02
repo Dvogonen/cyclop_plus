@@ -48,14 +48,15 @@ If you would rather use 3.3 volt, there is an easily accessible pad next to the 
 ![ICSP pin header](/images/pcb_33v_display.jpg)
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
 
-##Attach an alarm speaker(optional)
-This modification is intended to use a non-active miniature speaker. One such example is miniature non active piezo speakers. It is very important that the speaker is of a high impedance type. It should preferably have an internal impedance (resistance) of around 120 Ohm. If a low impedance speaker is connected (typically around 4 or 8 ohm), the D6 processor pin may be permanently damaged when the alarm is turned on.
-An example of a piezo speaker is this:
-![128x64 OLED with I2C interface](/images/piezo.jpg)
-Please note that there are also active piezo _buzzers_ that look much the same. These produce a tone automatically when turned on. Do not use one of these.
-- Solder a wire from the a speaker leg to the solder point marked D6 on the reverse side of the receiver module. If your speaker has a read wire or has a leg marked with a +, this is the leg to connect to D6.
-- Solder the other speaker wirre to a ground point. The legs of the antenna contact as well as the square through hole solder island in the middle of the PCB are ground points.
+##Attach an alarm buzzer(optional)
+This modification is intended to use an active miniature buzzer. It is very important that the buzzer has an internal impedance (resistance) of at least 100 Ohm. If a lower impedance buzzer is connected, the D6 processor pin may be permanently damaged when the alarm is turned on.
+An example of a piezo buzzer is this:
+![Buzzer Example](/images/piezo.jpg)
+Please note that there are also active piezo _speakers_ that look much the same. These do not produce a tone automatically. Do not use one of these.
+- Solder the red wire comming from your buzzer to the solder point marked D6. If your buzzer does not have a red wire instead solder the leg marked with a + to the D6 solder pad.
+- Solder the other (black) wire to a ground point. The legs of the antenna contact as well as the square through hole solder island in the middle of the PCB are ground points.
 - Enable the Low Battery Alarm option in the configuration menu.
+![Alarm Speaker Connection](/images/pcb_buzzer.jpg)
 
 ###Build CYCLOP+ (optional)
 - The project is built using the Arduino development environment. Download the Arduino development environment from www.arduino.cc.
