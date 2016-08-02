@@ -115,7 +115,7 @@
 #define OLED_I2C_ADR      0x3C
 
 // Release information
-#define VER_DATE_STRING   "2016-07-15"
-#define VER_INFO_STRING   "v1.3 by Dvogonen"
+#define VER_DATE_STRING   "UNFINISHED"
+#define VER_INFO_STRING   "v1.4 by Dvogonen"
 
 #endif // cyclop_plus_h

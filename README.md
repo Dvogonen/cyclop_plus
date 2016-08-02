@@ -1,15 +1,16 @@
-#CYCLOP+ v1.3
-###New features in v1.3:
-- Holding the button during power up brings up an options screen
-- The screen can be flipped in either direction from the options screen
-- A battery meter for 3s batteries can be turned on in the options screen
-- A battery meter for 2s batteries can be turned on in the options screen
-- A screen saver can be turned on in the options screen (after 10 seconds of inactivity the screen goes blank)
+#CYCLOP+ v1.4
 
-###Introduction and Goals
-The first goal of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
-The second goal is to add support for connecting an OLED display to the receiver so that more information can be presented.
-No hardware alteration is necessary to use CYCLOPS+. The OLED display is optional.
+###Introduction and Functions
+The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
+The second major function is to add support for an external OLED display that information can be presented to the user.
+No hardware alteration is necessary to use CYCLOPS+. The OLED display modification is optional. The buzzer modification is also optional.
+
+###Version History
+1.0 Initial dev version, not released
+1.1 Functionly complete dev version, not released
+1.2 Timing optimizations. First released version. 2016-06-20
+1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
+1.4 Low battery alarm added. UNDER DEVELOPMENT - NOT YET RELEASED
 
 ###Links
 This is a short video introduction to the functionality (of v1.2):
@@ -54,6 +55,15 @@ My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you us
 If you would rather use 3.3 volt, there is an easily accessible pad next to the receiver module can.
 ![ICSP pin header](/images/pcb_33v_display.jpg)
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
+
+##Attach an alarm speaker(optional)
+This modification is intended to use a non-active miniature speaker. One such example is miniature non active piezo speakers. It is very important that the speaker is of a high impedance type. It should preferably have an internal impedance (resistance) of around 120 Ohm. If a low impedance speaker is connected (typically around 4 or 8 ohm), the D6 processor pin may be permanently damaged when the alarm is turned on.
+An example of a piezo speaker is this:
+![128x64 OLED with I2C interface](/images/piezo.jpg)
+Please note that there are also active piezo _buzzers_ that look much the same. These produce a tone automatically when turned on. Do not use one of these.
+- Solder a wire from the a speaker leg to the solder point marked D6 on the reverse side of the receiver module. If your speaker has a read wire or has a leg marked with a +, this is the leg to connect to D6.
+- Solder the other speaker wirre to a ground point. The legs of the antenna contact as well as the square through hole solder island in the middle of the PCB are ground points.
+- Enable the Low Battery Alarm option in the configuration menu.
 
 ###Build CYCLOP+ (optional)
 - The project is built using the Arduino development environment. Download the Arduino development environment from www.arduino.cc.
@@ -102,6 +112,14 @@ Select "Intel Hex" as format in the Flash box.
 Execute a write.
 - If everything is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so.
 When it goes black again the programming is done and the board can be mounted in the googles.
+
+###Configure CYCLOP+
+- Hold down the button during power up to enter the system options screen.
+- Use single click and double click to navigate in the menu.
+- Use long click to select or unselect an option.
+- Examples of configurabel options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm
+- Enabling the screen saver option makes the display go out 10 seconds after the last button press. Use this if the display is mounted inside the visor.
+- The settings are saved when the Exit option is selected. All changes are lost if the battery is disconnected before Exit has been selected.
 
 ###Use CYCLOP+
 - A single click jumps up in frequency to the closest channel among the 40 available.

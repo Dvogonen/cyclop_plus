@@ -28,13 +28,7 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
-*******************************************************************************
-  Version History
-  1.0 Initial dev version, not released
-  1.1 Functionly complete dev version, not released
-  1.2 Timing optimizations. First released version. 2016-06-20
-  1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
-*******************************************************************************/
+********************************************************************************/
 
 // Library includes
 #include <avr/pgmspace.h>
