@@ -6,13 +6,13 @@ The second major function is to add support for an external OLED display that in
 No hardware alteration is necessary to use CYCLOPS+. The OLED display modification is optional. The buzzer modification is also optional.
 
 ###Version History
-1.0 Initial dev version, not released
-1.1 Functionly complete dev version, not released
-1.2 Timing optimizations. First released version. 2016-06-20
-1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
-1.4 Low battery alarm added. UNDER DEVELOPMENT - NOT YET RELEASED
+* 1.0 Initial dev version, not released
+* 1.1 Functionly complete dev version, not released
+* 1.2 Timing optimizations. First released version. 2016-06-20
+* 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
+* 1.4 Low battery alarm added. UNDER DEVELOPMENT - NOT YET RELEASED
 
-###Links
+###Informative Links
 This is a short video introduction to the functionality (of v1.2):
 https://youtu.be/mDhL1hS-EHk
 
@@ -22,15 +22,7 @@ https://youtu.be/C4XgYwpNXS0
 This is an installation description written by RadianceNL. It is much more detailed than the description below.
 https://radiance-fpv.nl/cyclop-plus-firmware-mod/
 
-###Words of Warning
-Use of the FW is completely on your own risk.
-You have to dismantle the googles to program the receiver with a so called ISP (alternatively called ICSP) programmer.
-It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3 volt wire coming from the programmer) to the wrong pin.
-Other types of wiring errors will lead to the programmer not working, but will probably not destroy anything.
-Always double check that VCC is connected correctly before you turn on power.
-
-It is possible to "Brick" the processor in your receiver by tampering with the so called processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
-
+#Installation
 ###Solder programming pins to the PCB(optional)
 - Solder a 2x3 block of pin headers into the holes for the ICSP port.
 If you do not want to solder anything you can program the board by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
@@ -126,6 +118,15 @@ When it goes black again the programming is done and the board can be mounted in
 - A double click jumps down in frequency
 - A long click (0.6 - 2 seconds) triggers a autoscan for the best channel, just like a single click does in the original firmware.
 - A long-long click (> 2 seconds) triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Hold down the button again when the channel you want to use flickers onto the main display.
+
+###Words of Warning
+Use of the FW is completely on your own risk.
+You have to dismantle the googles to program the receiver with a so called ISP (alternatively called ICSP) programmer.
+It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3 volt wire coming from the programmer) to the wrong pin.
+Other types of wiring errors will lead to the programmer not working, but will probably not destroy anything.
+Always double check that VCC is connected correctly before you turn on power.
+
+It is possible to "Brick" the processor in your receiver by tampering with the so called processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
 
 ###License
 The MIT License (MIT)
