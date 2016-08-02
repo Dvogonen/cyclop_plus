@@ -110,7 +110,7 @@ When it goes black again the programming is done and the board can be mounted in
 - Hold down the button during power up to enter the system options screen.
 - Use single click and double click to navigate in the menu.
 - Use long click to select or unselect an option.
-- Examples of configurabel options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm
+- Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm.
 - Enabling the screen saver option makes the display go out 10 seconds after the last button press. Use this if the display is mounted inside the visor.
 - The settings are saved when the Exit option is selected. All changes are lost if the battery is disconnected before Exit has been selected.
 
