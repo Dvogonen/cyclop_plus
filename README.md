@@ -51,7 +51,7 @@ Please note that if you instead want to connect to solder pads on the back of th
 ##Attach an alarm buzzer(optional)
 This modification is intended to use an active miniature buzzer. It is very important that the buzzer has an internal impedance (resistance) of at least 100 Ohm. If a lower impedance buzzer is connected, the D6 processor pin may be permanently damaged when the alarm is turned on.
 An example of a piezo buzzer is this:
-![Buzzer Example](/images/piezo.jpg)
+![Buzzer Example](/images/buzzer.jpg)
 Please note that there are also active piezo _speakers_ that look much the same. These do not produce a tone automatically. Do not use one of these.
 - Solder the red wire comming from your buzzer to the solder point marked D6. If your buzzer does not have a red wire instead solder the leg marked with a + to the D6 solder pad.
 - Solder the other (black) wire to a ground point. The legs of the antenna contact as well as the square through hole solder island in the middle of the PCB are ground points.
