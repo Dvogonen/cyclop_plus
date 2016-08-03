@@ -7,6 +7,9 @@
   Without those projects CYCLOP+ would not have been created. All possible
   credit goes to the two mentioned projects and their contributors.
 
+  I have used wonho-makers Adafruit_SH1106 library to add support for OLED
+  screens with an SH1106 controller. The default is to use SSD1306 OLEDs.
+
   The MIT License (MIT)
 
   Copyright (c) 2016 Kjell Kernen (Dvogonen)
