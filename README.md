@@ -32,12 +32,22 @@ The pins should point upwards on the same side as the receiver tin can is instal
 The top left pin is VCC. 
  
 ###Attach an OLED display(optional)
-- Solder an OLED 128x64 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA). 
+- Solder an OLED 128x64 SSD1306 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
+
 ![128x64 OLED with I2C interface](/images/oled.jpg)
+
 These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on eBay for around 5$.
 Do not buy one of the two-colored ones. 
 You want a black and white display without any missing lines (the two-colored displays have slight space between the two color fields).
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
+There are two different OLED screen types available that look the same.
+One type has a SSD1306 controller built in, while the other uses a SH1106 controller. 
+Cyclop+ _only_ works with SSD1306 OLED controllers. 
+SH1106 OLEDs do not work. 
+The problem is that Chinese sellers often just copy and paste text from other sellers and basically do not know what they sell. 
+A lot of SH1106 OLED screens have been sold as SSD1306 screens lately.
+If your OLED screen mostly displays white, whith a thin band of garbled graphics at the top, your screen has a SH1106 controller.
+
 There are several pads available on the board, so you do not have to solder to the processor legs.
 The board designer was kind enough to add three pads just to the left of display contact that are (from the left) Ground, SDA and SCL.
 ![ICSP pin header](/images/pcb_5v_display.jpg)
