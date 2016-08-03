@@ -35,6 +35,13 @@
 // This definition is used by the ADAFRUIT library
 #define OLED_128x64_ADAFRUIT_SCREENS
 
+// The OLED screens have either got address 0x2C or 0x3C
+#define OLED_I2C_ADR      0x3C
+
+// Select only one OLED type
+#define SSD1306_OLED_DRIVER 
+//#define SH1106_OLED_DRIVER
+
 // User Configuration Options
 #define FLIP_SCREEN_OPTION        0
 #define LIPO_2S_METER_OPTION      1
@@ -122,10 +129,6 @@
 // LED state defines
 #define LED_OFF           LOW
 #define LED_ON            HIGH
-
-// The OLED screens have either got address 0x2C or 0x3C
-//#define OLED_I2C_ADR      0x2C
-#define OLED_I2C_ADR      0x3C
 
 // Release information
 #define VER_DATE_STRING   "UNFINISHED"

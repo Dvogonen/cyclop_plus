@@ -29,16 +29,20 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 ********************************************************************************/
+// Application includes
+#include "cyclop_plus.h"
 
 // Library includes
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <EEPROM.h>
+#ifdef SSD1306_OLED_DRIVER
 #include <Adafruit_SSD1306.h>
+#endif
+#ifdef SH1106_OLED_DRIVER
+#include "libraries/adafruit_sh1106/Adafruit_SH1106.h"
+#endif
 #include <Adafruit_GFX.h>
-
-// Application includes
-#include "cyclop_plus.h"
 
 //******************************************************************************
 //* File scope function declarations
@@ -101,7 +105,12 @@ uint16_t getFrequency( uint8_t channel ) {
 
 //******************************************************************************
 //* Other file scope variables
+#ifdef SSD1306_OLED_DRIVER
 Adafruit_SSD1306 display(4);
+#endif
+#ifdef SH1106_OLED_DRIVER
+Adafruit_SH1106 display(4);
+#endif
 uint8_t lastClick = NO_CLICK;
 uint8_t currentChannel = 0;
 uint8_t lastChannel = 0;
@@ -149,7 +158,12 @@ void setup()
   setRTC6715Frequency(getFrequency(currentChannel));
 
   // Initialize the display
+#ifdef SSD1306_OLED_DRIVER
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADR);
+#endif
+#ifdef SH1106_OLED_DRIVER
+  display.begin(SH1106_SWITCHCAPVCC, OLED_I2C_ADR);
+#endif
   display.clearDisplay();
   if (options[FLIP_SCREEN_OPTION])
     display.setRotation(2);
@@ -692,15 +706,27 @@ void batteryMeter( void )
     value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);
 
   // Set alarm state and period constants
-  alarmState = ALARM_OFF; 
+  alarmState = ALARM_OFF;
   alarmOnPeriod = 1000;
   alarmOffPeriod = 1000;
   if (value < 5)
-    { alarmState = ALARM_MAX; alarmOnPeriod = ALARM_MAX_ON;  alarmOffPeriod = ALARM_MAX_OFF; }
+  {
+    alarmState = ALARM_MAX;
+    alarmOnPeriod = ALARM_MAX_ON;
+    alarmOffPeriod = ALARM_MAX_OFF;
+  }
   else if (value < 10)
-    { alarmState = ALARM_MED; alarmOnPeriod = ALARM_MED_ON; alarmOffPeriod = ALARM_MED_OFF; }
+  {
+    alarmState = ALARM_MED;
+    alarmOnPeriod = ALARM_MED_ON;
+    alarmOffPeriod = ALARM_MED_OFF;
+  }
   else if (value < 20)
-    { alarmState = ALARM_MIN; alarmOnPeriod = ALARM_MIN_ON; alarmOffPeriod = ALARM_MIN_OFF; }
+  {
+    alarmState = ALARM_MIN;
+    alarmOnPeriod = ALARM_MIN_ON;
+    alarmOffPeriod = ALARM_MIN_OFF;
+  }
 
   drawBattery(58, 32, value);
 }
