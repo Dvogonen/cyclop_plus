@@ -37,7 +37,7 @@
 
 // Library includes
 #include <avr/pgmspace.h>
-#include <string.h> 
+#include <string.h>
 #include <EEPROM.h>
 #ifdef SSD1306_OLED_DRIVER
 #include <Adafruit_SSD1306.h>
@@ -72,6 +72,7 @@ void     resetOptions(void);
 char    *shortNameOfChannel(uint8_t channel, char *name);
 void     setRTC6715Frequency(uint16_t frequency);
 void     setOptions( void );
+void     testAlarm( void );
 void     updateScannerScreen(uint8_t position, uint8_t value );
 void     writeEeprom(void);
 
@@ -777,11 +778,28 @@ void setOptions()
           exitNow = true;
         else if (menuSelection == RESET_SETTINGS_COMMAND)
           resetOptions();
+
+        else if (menuSelection == TEST_ALARM_COMMAND)
+          testAlarm();
         else
           options[menuSelection] = !options[menuSelection];
         break;
     }
   }
+}
+
+//******************************************************************************
+//* function: testAlarm
+//*         : Beeps, regardless of alarm settings and state
+//******************************************************************************
+void testAlarm( void ) {
+  analogWrite( ALARM_PIN, 128 );
+  delay(200);
+  analogWrite( ALARM_PIN, 0 );
+  delay (1000);
+  digitalWrite(ALARM_PIN, HIGH);
+  delay(200);
+  digitalWrite(ALARM_PIN, LOW);
 }
 
 //******************************************************************************
@@ -993,6 +1011,7 @@ void drawOptionsScreen(uint8_t option ) {
       case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
       case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
       case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
+      case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
     if (j < MAX_OPTIONS) {

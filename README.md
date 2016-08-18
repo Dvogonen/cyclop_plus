@@ -3,14 +3,14 @@
 ###Introduction and Functions
 The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second major function is to add support for an external OLED display that information can be presented to the user.
-No hardware alteration is necessary to use CYCLOPS+. The OLED display modification is optional. The buzzer modification is also optional.
+No hardware alteration is necessary to use CYCLOP+. The OLED display modification is optional. The buzzer modification is also optional.
 
 ###Version History
 * 1.0 Initial dev version, not released
 * 1.1 Functionly complete dev version, not released
 * 1.2 Timing optimizations. First released version. 2016-06-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
-* 1.4 Low battery alarm added. UNDER DEVELOPMENT - NOT YET RELEASED
+* 1.4 SH1106 OLED support added. Low battery alarm added. UNDER DEVELOPMENT - NOT YET RELEASED
 
 ###Informative Links
 This is a short video introduction to the functionality (of v1.2):
@@ -32,7 +32,7 @@ The pins should point upwards on the same side as the receiver tin can is instal
 The top left pin is VCC. 
  
 ###Attach an OLED display(optional)
-- Solder an OLED 128x64 SSD1306 screen with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
+- Solder an OLED 128x64 SSD1306 (or SH1106) display with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
 
@@ -40,21 +40,28 @@ These little display modules where popularized by Adafruit. They are very common
 Do not buy one of the two-colored ones. 
 You want a black and white display without any missing lines (the two-colored displays have slight space between the two color fields).
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
+
 There are two different OLED screen types available that look the same.
 One type has a SSD1306 controller built in, while the other uses a SH1106 controller. 
-Cyclop+ _only_ works with SSD1306 OLED controllers. 
-SH1106 OLEDs do not work. 
-The problem is that Chinese sellers often just copy and paste text from other sellers and basically do not know what they sell. 
+These are not compatible and need different software.
+Chinese sellers on eBay often copy and paste text from other sellers and basically do not know what they sell.
 A lot of SH1106 OLED screens have been sold as SSD1306 screens lately.
-If your OLED screen mostly displays white, whith a thin band of garbled graphics at the top, your screen has a SH1106 controller.
+CYCLOP+ v1.4 is available in versions for both SSD1306 and SH1106.
+You do have to select the right CYCLOP+ binary for your display to work, but since loading the wrong binary will not damage anything, this is nothing to stress out about.
+If your OLED screen mostly displays white, whith a thin band of garbled graphics at the top, you have loaded the software for a SSD1306, but the display is actually a SH1106.
 
 There are several pads available on the board, so you do not have to solder to the processor legs.
 The board designer was kind enough to add three pads just to the left of display contact that are (from the left) Ground, SDA and SCL.
 ![ICSP pin header](/images/pcb_5v_display.jpg)
-The OLED screens can use either 3.3 or 5 volts for VCC. I used 5 volts.
-The easiest point to find this is on the rightmost pin of the main display contact.
-My 5v feed was calibrated to 6.15 volts. You might want to adjust this if you use 5 volt.
-If you would rather use 3.3 volt, there is an easily accessible pad next to the receiver module can.
+The OLED screens can use either 3.3 or 5 volts for VCC (even if the spec says 3.3-4.2 volts).
+I recommend using 3.3 volts.
+There is an easily accessible 3.3 volt pad next to the receiver module can.
+Some OLED displays do not work on 3.3 volts.
+If this is the case for your OLED, you can try to adjust the voltage regulator to deliver 5 volts rather than 6 and use the output from the regulator to drive your OLED instead.
+The easiest point to find the regulator output voltage is on the rightmost pin of the main display contact.
+A side effect of adjusting the regulator is that the main display is running on a lower voltage than intended. This seems to work for most people, but in some cases the main screen will not start up.
+If you are among the unlucky ones who have gotten an OLED that refuses to work on 3.3 volts and a main display that only works above 6 volts, you have to get inventive.
+Either buy another OLED or install a separate voltage regulator for the OLED.
 ![ICSP pin header](/images/pcb_33v_display.jpg)
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
 
@@ -74,13 +81,15 @@ Please note that there are also active piezo _speakers_ that look much the same.
 - Download the CYCLOP+ source code from GitHub.
 - Navigate to the cyclop_plus.ino file and open it in the Arduino development environment.
 - Download the two external LCD libraries (Adafruit GFX and Adafruit SSD1306). This is done within the Arduino environment.
-- Select display type by editing Adafruit_SSD1306.h. Look at line 69 in the file.
+- Select display type by editing Adafruit_SSD1306.h. Look at line 42 in the file.
 - Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the "Tool" menu.
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
-The firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus.hex (right-click and download)
+The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus.hex (right-click and download)
+The SH1106 version firmware file is called cyclop_plus_sh1106.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_sh1106.hex (right-click and download)
+If you do not install an OLED, you can use either binary.
 Check the format of the downloaded file. Each line should start with a colon character and only contain letters and numbers like this:
 
 :100000000C941F030C9447030C9447030C94470370
