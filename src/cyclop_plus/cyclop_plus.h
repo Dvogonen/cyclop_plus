@@ -76,15 +76,11 @@
 #define SAVE_SCREEN_DELAY_MS      10000
 
 // Alarm timing constants (in milli seconds)
-#define ALARM_OFF         0
-#define ALARM_MIN         1
-#define ALARM_MED         2
-#define ALARM_MAX         3
-#define ALARM_MAX_ON      200
-#define ALARM_MED_ON      200
-#define ALARM_MIN_ON      200
+#define ALARM_MAX_ON      50
 #define ALARM_MAX_OFF     200
+#define ALARM_MED_ON      100
 #define ALARM_MED_OFF     1000
+#define ALARM_MIN_ON      200
 #define ALARM_MIN_OFF     3000
 
 // Digital pin definitions

@@ -125,10 +125,9 @@ unsigned long displayUpdateTimer = 0;
 unsigned long eepromSaveTimer = 0;
 unsigned long pulseTimer = 0;
 unsigned long alarmTimer = 0;
-uint8_t alarmState = ALARM_OFF;
-uint8_t alarmSound = 0;
-uint8_t alarmOnPeriod = 0;
-uint8_t alarmOffPeriod = 0;
+uint8_t alarmSoundOn = 0;
+uint16_t alarmOnPeriod = 0;
+uint16_t alarmOffPeriod = 0;
 uint8_t options[MAX_OPTIONS];
 
 //******************************************************************************
@@ -257,11 +256,11 @@ void loop()
   digitalWrite(LED_PIN, ledState);
 
   // Toggle alarm on or off
-  if (options[BATTERY_ALARM_OPTION] && alarmState) {
+  if (options[BATTERY_ALARM_OPTION] && alarmOnPeriod) {
     if (millis() > alarmTimer) {
-      alarmSound = !alarmSound;
-      if (alarmSound) {
-        analogWrite( ALARM_PIN, 128 );
+      alarmSoundOn = !alarmSoundOn;
+      if (alarmSoundOn) {
+        analogWrite( ALARM_PIN, 32 );
         alarmTimer = millis() + alarmOnPeriod;
       }
       else {
@@ -270,6 +269,8 @@ void loop()
       }
     }
   }
+  else
+    analogWrite( ALARM_PIN, 0 );
 }
 
 //******************************************************************************
@@ -709,29 +710,27 @@ void batteryMeter( void )
   else
     value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);
 
-  // Set alarm state and period constants
-  alarmState = ALARM_OFF;
-  alarmOnPeriod = 1000;
-  alarmOffPeriod = 1000;
+  // Set alarm periods
   if (value < 5)
   {
-    alarmState = ALARM_MAX;
     alarmOnPeriod = ALARM_MAX_ON;
     alarmOffPeriod = ALARM_MAX_OFF;
   }
   else if (value < 10)
   {
-    alarmState = ALARM_MED;
     alarmOnPeriod = ALARM_MED_ON;
     alarmOffPeriod = ALARM_MED_OFF;
   }
   else if (value < 20)
   {
-    alarmState = ALARM_MIN;
     alarmOnPeriod = ALARM_MIN_ON;
     alarmOffPeriod = ALARM_MIN_OFF;
   }
-
+  else
+  {
+    alarmOnPeriod = 0;
+    alarmOffPeriod = 0;
+  }
   drawBattery(58, 32, value);
 }
 
@@ -779,8 +778,9 @@ void setOptions()
         else if (menuSelection == RESET_SETTINGS_COMMAND)
           resetOptions();
 
-        else if (menuSelection == TEST_ALARM_COMMAND)
+        else if (menuSelection == TEST_ALARM_COMMAND) {
           testAlarm();
+        }
         else
           options[menuSelection] = !options[menuSelection];
         break;
@@ -790,16 +790,24 @@ void setOptions()
 
 //******************************************************************************
 //* function: testAlarm
-//*         : Beeps, regardless of alarm settings and state
+//*         : Cycles through alarms, regardless of alarm settings
 //******************************************************************************
 void testAlarm( void ) {
-  analogWrite( ALARM_PIN, 128 );
-  delay(200);
+  uint8_t i;
+
+  for ( i = 0; i < 3; i++) {
+    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MIN_ON);
+    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MIN_OFF);
+  }
+  for (i = 0; i < 3; i++) {
+    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MED_ON);
+    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MED_OFF);
+  }
+  for (i = 0; i < 3; i++) {
+    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MAX_ON);
+    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MAX_OFF);
+  }
   analogWrite( ALARM_PIN, 0 );
-  delay (1000);
-  digitalWrite(ALARM_PIN, HIGH);
-  delay(200);
-  digitalWrite(ALARM_PIN, LOW);
 }
 
 //******************************************************************************
