@@ -716,12 +716,12 @@ void batteryMeter( void )
     alarmOnPeriod = ALARM_MAX_ON;
     alarmOffPeriod = ALARM_MAX_OFF;
   }
-  else if (value < 10)
+  else if (value < 15)
   {
     alarmOnPeriod = ALARM_MED_ON;
     alarmOffPeriod = ALARM_MED_OFF;
   }
-  else if (value < 20)
+  else if (value < 25)
   {
     alarmOnPeriod = ALARM_MIN_ON;
     alarmOffPeriod = ALARM_MIN_OFF;
@@ -977,15 +977,15 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
   display.drawRect(3 + xPos,  0 + yPos, 4, 2, WHITE);
   display.drawRect(0 + xPos, 2 + yPos, 10, 20, WHITE);
   display.drawRect(2 + xPos,  4 + yPos, 6, 16, BLACK);
-  if (value > 95)
+  if (value > 85)
     display.drawRect(3 + xPos,  5 + yPos, 4, 2, WHITE);
-  if (value > 75)
+  if (value > 65)
     display.drawRect(3 + xPos,  8 + yPos, 4, 2, WHITE);
-  if (value > 55)
+  if (value > 45)
     display.drawRect(3 + xPos,  11 + yPos, 4, 2, WHITE);
-  if (value > 35)
+  if (value > 25)
     display.drawRect(3 + xPos, 14 + yPos, 4, 2, WHITE);
-  if (value > 15)
+  if (value > 5)
     display.drawRect(3 + xPos, 17 + yPos, 4, 2, WHITE);
 }
 
