@@ -7,6 +7,9 @@
   Without those projects CYCLOP+ would not have been created. All possible
   credit goes to the two mentioned projects and their contributors.
 
+  I have used wonho-makers Adafruit_SH1106 library to add support for OLED
+  screens with an SH1106 controller. The default is to use SSD1306 OLEDs.
+
   The MIT License (MIT)
 
   Copyright (c) 2016 Kjell Kernen (Dvogonen)
@@ -28,23 +31,21 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
-*******************************************************************************
-  Version History
-  1.0 Initial dev version, not released
-  1.1 Functionly complete dev version, not released
-  1.2 Timing optimizations. First released version. 2016-06-20
-  1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
-*******************************************************************************/
+********************************************************************************/
+// Application includes
+#include "cyclop_plus.h"
 
 // Library includes
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <EEPROM.h>
+#ifdef SSD1306_OLED_DRIVER
 #include <Adafruit_SSD1306.h>
+#endif
+#ifdef SH1106_OLED_DRIVER
+#include "libraries/adafruit_sh1106/Adafruit_SH1106.h"
+#endif
 #include <Adafruit_GFX.h>
-
-// Application includes
-#include "cyclop_plus.h"
 
 //******************************************************************************
 //* File scope function declarations
@@ -71,6 +72,7 @@ void     resetOptions(void);
 char    *shortNameOfChannel(uint8_t channel, char *name);
 void     setRTC6715Frequency(uint16_t frequency);
 void     setOptions( void );
+void     testAlarm( void );
 void     updateScannerScreen(uint8_t position, uint8_t value );
 void     writeEeprom(void);
 
@@ -107,7 +109,12 @@ uint16_t getFrequency( uint8_t channel ) {
 
 //******************************************************************************
 //* Other file scope variables
+#ifdef SSD1306_OLED_DRIVER
 Adafruit_SSD1306 display(4);
+#endif
+#ifdef SH1106_OLED_DRIVER
+Adafruit_SH1106 display(4);
+#endif
 uint8_t lastClick = NO_CLICK;
 uint8_t currentChannel = 0;
 uint8_t lastChannel = 0;
@@ -117,6 +124,10 @@ unsigned long saveScreenTimer;
 unsigned long displayUpdateTimer = 0;
 unsigned long eepromSaveTimer = 0;
 unsigned long pulseTimer = 0;
+unsigned long alarmTimer = 0;
+uint8_t alarmSoundOn = 0;
+uint16_t alarmOnPeriod = 0;
+uint16_t alarmOffPeriod = 0;
 uint8_t options[MAX_OPTIONS];
 
 //******************************************************************************
@@ -131,6 +142,9 @@ void setup()
   // initialize button pin
   pinMode(BUTTON_PIN, INPUT);
   digitalWrite(BUTTON_PIN, INPUT_PULLUP);
+
+  // initialize alarm
+  pinMode(ALARM_PIN, OUTPUT );
 
   // SPI pins for RX control
   pinMode (SLAVE_SELECT_PIN, OUTPUT);
@@ -147,7 +161,12 @@ void setup()
   setRTC6715Frequency(getFrequency(currentChannel));
 
   // Initialize the display
+#ifdef SSD1306_OLED_DRIVER
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADR);
+#endif
+#ifdef SH1106_OLED_DRIVER
+  display.begin(SH1106_SWITCHCAPVCC, OLED_I2C_ADR);
+#endif
   display.clearDisplay();
   if (options[FLIP_SCREEN_OPTION])
     display.setRotation(2);
@@ -220,7 +239,6 @@ void loop()
       displayUpdateTimer = millis() + 1000;
     }
   }
-
   // Check if EEPROM needs a save. Reduce EEPROM writes by not saving to often
   if ((currentChannel != lastChannel) && (millis() > eepromSaveTimer))
   {
@@ -228,13 +246,29 @@ void loop()
     lastChannel = currentChannel;
     eepromSaveTimer = millis() + 10000;
   }
-
   // Check if it is time to switch LED state for the pulse led
   if ( millis() > pulseTimer ) {
     ledState = !ledState;
     pulseTimer = millis() + 500;
   }
   digitalWrite(LED_PIN, ledState);
+
+  // Toggle alarm on or off
+  if (options[BATTERY_ALARM_OPTION] && alarmOnPeriod) {
+    if (millis() > alarmTimer) {
+      alarmSoundOn = !alarmSoundOn;
+      if (alarmSoundOn) {
+        analogWrite( ALARM_PIN, 32 );
+        alarmTimer = millis() + alarmOnPeriod;
+      }
+      else {
+        analogWrite( ALARM_PIN, 0 );
+        alarmTimer = millis() + alarmOffPeriod;
+      }
+    }
+  }
+  else
+    analogWrite( ALARM_PIN, 0 );
 }
 
 //******************************************************************************
@@ -247,7 +281,7 @@ void resetOptions(void) {
   options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
-  options[SAVE_SCREEN_OPTION]       = SAVE_SCREEN_DEFAULT;
+  options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
 }
 
 //******************************************************************************
@@ -285,14 +319,9 @@ uint8_t getClickType(uint8_t buttonPin) {
   uint8_t click_type = NO_CLICK;
 
   // check if the key has been pressed
-  if (digitalRead(buttonPin) == !BUTTON_PRESSED) {
+  if (digitalRead(buttonPin) == !BUTTON_PRESSED)
     return ( NO_CLICK );
-  }
-  // Debounce to make sure it was a real key press
-  delay(DEBOUNCE_MS);
-  if (digitalRead(buttonPin) == !BUTTON_PRESSED) {
-    return ( NO_CLICK );
-  }
+
   while (digitalRead(buttonPin) == BUTTON_PRESSED) {
     timer++;
     delay(5);
@@ -309,16 +338,16 @@ uint8_t getClickType(uint8_t buttonPin) {
   while ((digitalRead(buttonPin) == !BUTTON_PRESSED) && (timer++ < 40)) {
     delay(5);
   }
-  if (timer == 40)                  // 40 * 5 ms = 0.2s
+  if (timer >= 40)                  // 40 * 5 ms = 0.2s
     return click_type;
-
-  // Debounce to make sure it was a real key press
-  delay( DEBOUNCE_MS);
-  if (digitalRead(buttonPin) == BUTTON_PRESSED )
+    
+  if (digitalRead(buttonPin) == BUTTON_PRESSED ) {
     click_type = DOUBLE_CLICK;
-
+    while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
+  }
   return (click_type);
 }
+
 //******************************************************************************
 //* function: nextChannel
 //******************************************************************************
@@ -449,7 +478,6 @@ uint16_t autoScan( uint16_t frequency ) {
       bestFrequency = scanFrequency;
     }
   }
-
   // Return the best frequency
   setRTC6715Frequency(bestFrequency);
   return (bestFrequency);
@@ -638,7 +666,7 @@ void spiEnableHigh()
 
 //******************************************************************************
 //* function: batteryMeter
-//*         : Measured voltage values 
+//*         : Measured voltage values
 //*         : 3s LiPo
 //*         : max = 4.2v * 3 = 12.6v = 643
 //*         : min = 3.6v * 3 = 10.8v = 551
@@ -665,15 +693,36 @@ void batteryMeter( void )
     minV = 367;
     maxV = 429;
   }
-  voltage = averageAnalogRead(VOLTAGE_METER_PIN); 
+  voltage = averageAnalogRead(VOLTAGE_METER_PIN);
 
   if (voltage >= maxV)
     value = 99;
   else if (voltage <= minV)
     value = 0;
   else
-    value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);   
+    value = (uint8_t)((voltage - minV) / (float)(maxV - minV) * 100.0);
 
+  // Set alarm periods
+  if (value < 5)
+  {
+    alarmOnPeriod = ALARM_MAX_ON;
+    alarmOffPeriod = ALARM_MAX_OFF;
+  }
+  else if (value < 15)
+  {
+    alarmOnPeriod = ALARM_MED_ON;
+    alarmOffPeriod = ALARM_MED_OFF;
+  }
+  else if (value < 25)
+  {
+    alarmOnPeriod = ALARM_MIN_ON;
+    alarmOffPeriod = ALARM_MIN_OFF;
+  }
+  else
+  {
+    alarmOnPeriod = 0;
+    alarmOffPeriod = 0;
+  }
   drawBattery(58, 32, value);
 }
 
@@ -720,11 +769,37 @@ void setOptions()
           exitNow = true;
         else if (menuSelection == RESET_SETTINGS_COMMAND)
           resetOptions();
+
+        else if (menuSelection == TEST_ALARM_COMMAND) {
+          testAlarm();
+        }
         else
           options[menuSelection] = !options[menuSelection];
         break;
     }
   }
+}
+
+//******************************************************************************
+//* function: testAlarm
+//*         : Cycles through alarms, regardless of alarm settings
+//******************************************************************************
+void testAlarm( void ) {
+  uint8_t i;
+
+  for ( i = 0; i < 3; i++) {
+    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MIN_ON);
+    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MIN_OFF);
+  }
+  for (i = 0; i < 3; i++) {
+    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MED_ON);
+    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MED_OFF);
+  }
+  for (i = 0; i < 3; i++) {
+    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MAX_ON);
+    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MAX_OFF);
+  }
+  analogWrite( ALARM_PIN, 0 );
 }
 
 //******************************************************************************
@@ -894,15 +969,15 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
   display.drawRect(3 + xPos,  0 + yPos, 4, 2, WHITE);
   display.drawRect(0 + xPos, 2 + yPos, 10, 20, WHITE);
   display.drawRect(2 + xPos,  4 + yPos, 6, 16, BLACK);
-  if (value > 95)
+  if (value > 85)
     display.drawRect(3 + xPos,  5 + yPos, 4, 2, WHITE);
-  if (value > 75)
+  if (value > 65)
     display.drawRect(3 + xPos,  8 + yPos, 4, 2, WHITE);
-  if (value > 55)
+  if (value > 45)
     display.drawRect(3 + xPos,  11 + yPos, 4, 2, WHITE);
-  if (value > 35)
+  if (value > 25)
     display.drawRect(3 + xPos, 14 + yPos, 4, 2, WHITE);
-  if (value > 15)
+  if (value > 5)
     display.drawRect(3 + xPos, 17 + yPos, 4, 2, WHITE);
 }
 
@@ -912,22 +987,24 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
 void drawOptionsScreen(uint8_t option ) {
   uint8_t i, j;
   display.clearDisplay();
-  display.fillRect(0, 0, 128, 11, WHITE);
-  display.setTextColor(BLACK);
+  display.setCursor(0, 0);
   display.setTextSize(1);
-  display.setCursor(2, 2);
-  display.print(F("Options Config"));
-  display.setCursor(0, 14);
-  display.setTextColor(WHITE);
 
-  for (i = 0, j = option; i < MAX_OPTION_LINES; i++, j++)
+  if (option != 0)
+    j = option - 1;
+  else
+    j = MAX_OPTIONS + MAX_COMMANDS - 1;
+
+  for (i = 0; i < MAX_OPTION_LINES; i++, j++)
   {
     if (j >= (MAX_OPTIONS + MAX_COMMANDS))
       j = 0;
-    if (j == option)
-      display.print(F(">"));
-    else
-      display.print(F(" "));
+    if (j == option) {
+      display.setTextColor(BLACK, WHITE);
+    }
+    else {
+      display.setTextColor(WHITE, BLACK);
+    }
     switch (j) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
       case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
@@ -936,14 +1013,18 @@ void drawOptionsScreen(uint8_t option ) {
       case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
       case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
       case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
+      case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
     if (j < MAX_OPTIONS) {
       if (options[j])
-        display.print(F(" ON"));
+        display.print(F(" ON "));
       else
         display.print(F(" OFF"));
     }
+    else
+      display.print("    ");
+
     display.println();
   }
   display.display();
