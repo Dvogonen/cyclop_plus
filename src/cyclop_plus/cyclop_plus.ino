@@ -239,7 +239,6 @@ void loop()
       displayUpdateTimer = millis() + 1000;
     }
   }
-
   // Check if EEPROM needs a save. Reduce EEPROM writes by not saving to often
   if ((currentChannel != lastChannel) && (millis() > eepromSaveTimer))
   {
@@ -247,7 +246,6 @@ void loop()
     lastChannel = currentChannel;
     eepromSaveTimer = millis() + 10000;
   }
-
   // Check if it is time to switch LED state for the pulse led
   if ( millis() > pulseTimer ) {
     ledState = !ledState;
@@ -283,7 +281,7 @@ void resetOptions(void) {
   options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
-  options[SAVE_SCREEN_OPTION]       = SAVE_SCREEN_DEFAULT;
+  options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
 }
 
 //******************************************************************************
@@ -321,14 +319,9 @@ uint8_t getClickType(uint8_t buttonPin) {
   uint8_t click_type = NO_CLICK;
 
   // check if the key has been pressed
-  if (digitalRead(buttonPin) == !BUTTON_PRESSED) {
+  if (digitalRead(buttonPin) == !BUTTON_PRESSED)
     return ( NO_CLICK );
-  }
-  // Debounce to make sure it was a real key press
-  delay(DEBOUNCE_MS);
-  if (digitalRead(buttonPin) == !BUTTON_PRESSED) {
-    return ( NO_CLICK );
-  }
+
   while (digitalRead(buttonPin) == BUTTON_PRESSED) {
     timer++;
     delay(5);
@@ -345,16 +338,16 @@ uint8_t getClickType(uint8_t buttonPin) {
   while ((digitalRead(buttonPin) == !BUTTON_PRESSED) && (timer++ < 40)) {
     delay(5);
   }
-  if (timer == 40)                  // 40 * 5 ms = 0.2s
+  if (timer >= 40)                  // 40 * 5 ms = 0.2s
     return click_type;
-
-  // Debounce to make sure it was a real key press
-  delay( DEBOUNCE_MS);
-  if (digitalRead(buttonPin) == BUTTON_PRESSED )
+    
+  if (digitalRead(buttonPin) == BUTTON_PRESSED ) {
     click_type = DOUBLE_CLICK;
-
+    while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
+  }
   return (click_type);
 }
+
 //******************************************************************************
 //* function: nextChannel
 //******************************************************************************
@@ -485,7 +478,6 @@ uint16_t autoScan( uint16_t frequency ) {
       bestFrequency = scanFrequency;
     }
   }
-
   // Return the best frequency
   setRTC6715Frequency(bestFrequency);
   return (bestFrequency);
@@ -995,22 +987,24 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
 void drawOptionsScreen(uint8_t option ) {
   uint8_t i, j;
   display.clearDisplay();
-  display.fillRect(0, 0, 128, 11, WHITE);
-  display.setTextColor(BLACK);
+  display.setCursor(0, 0);
   display.setTextSize(1);
-  display.setCursor(2, 2);
-  display.print(F("Options Config"));
-  display.setCursor(0, 14);
-  display.setTextColor(WHITE);
 
-  for (i = 0, j = option; i < MAX_OPTION_LINES; i++, j++)
+  if (option != 0)
+    j = option - 1;
+  else
+    j = MAX_OPTIONS + MAX_COMMANDS - 1;
+
+  for (i = 0; i < MAX_OPTION_LINES; i++, j++)
   {
     if (j >= (MAX_OPTIONS + MAX_COMMANDS))
       j = 0;
-    if (j == option)
-      display.print(F(">"));
-    else
-      display.print(F(" "));
+    if (j == option) {
+      display.setTextColor(BLACK, WHITE);
+    }
+    else {
+      display.setTextColor(WHITE, BLACK);
+    }
     switch (j) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
       case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
@@ -1024,10 +1018,13 @@ void drawOptionsScreen(uint8_t option ) {
     }
     if (j < MAX_OPTIONS) {
       if (options[j])
-        display.print(F(" ON"));
+        display.print(F(" ON "));
       else
         display.print(F(" OFF"));
     }
+    else
+      display.print("    ");
+
     display.println();
   }
   display.display();
