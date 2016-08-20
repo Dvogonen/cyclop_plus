@@ -10,7 +10,7 @@ No hardware alteration is necessary to use CYCLOP+. The OLED display modificatio
 * 1.1 Functionly complete dev version, not released
 * 1.2 Timing optimizations. First released version. 2016-06-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
-* 1.4 SH1106 OLED support added. Low battery alarm added. UNDER DEVELOPMENT - NOT YET RELEASED
+* 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
 
 ###Informative Links
 This is a short video introduction to the functionality (of v1.2):
@@ -32,7 +32,7 @@ The pins should point upwards on the same side as the receiver tin can is instal
 The top left pin is VCC. 
  
 ###Attach an OLED display(optional)
-- Solder an OLED 128x64 SSD1306 (or SH1106) display with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
+- Solder a SSD1306 or SH1106 OLED 128x64 display with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
 
@@ -66,7 +66,7 @@ Either buy another OLED or install a separate voltage regulator for the OLED.
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
 
 ##Attach an alarm buzzer(optional)
-This modification is intended to use an active miniature buzzer. It is very important that the buzzer has an internal impedance (resistance) of at least 100 Ohm. If a lower impedance buzzer is connected, the D6 processor pin may be permanently damaged when the alarm is turned on.
+This modification is intended to use an active 5 volt miniature buzzer. 
 An example of a piezo buzzer is this:
 ![Buzzer Example](/images/buzzer.jpg)
 Please note that there are also active piezo _speakers_ that look much the same. These do not produce a tone automatically. Do not use one of these.
