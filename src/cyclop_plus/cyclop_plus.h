@@ -64,13 +64,13 @@
 #define MAX_OPTIONS               6
 
 // User Configuration Commands
-#define TEST_ALARM_COMMAND        6
+#define EXIT_COMMAND              6
 #define RESET_SETTINGS_COMMAND    7
-#define EXIT_COMMAND              8
+#define TEST_ALARM_COMMAND        8
 #define MAX_COMMANDS              3
 
 // Number of lines in configuration menu
-#define MAX_OPTION_LINES          7
+#define MAX_OPTION_LINES          6
 
 // Delay after key click before screen save (in milli seconds)
 #define SAVE_SCREEN_DELAY_MS      10000
@@ -94,6 +94,9 @@
 // Analog pin definitions
 #define VOLTAGE_METER_PIN A1
 #define RSSI_PIN          A6
+
+// button debounce delay in ms
+#define DEBOUNCE_MS       75
 
 // Minimum delay between setting a channel and trusting the RSSI values
 #define RSSI_STABILITY_DELAY_MS 25
@@ -129,7 +132,7 @@
 #define LED_ON            HIGH
 
 // Release information
-#define VER_DATE_STRING   "2016-08-20"
+#define VER_DATE_STRING   "UNFINISHED"
 #define VER_INFO_STRING   "v1.4 by Dvogonen"
 
 #endif // cyclop_plus_h
