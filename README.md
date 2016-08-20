@@ -88,7 +88,9 @@ Please note that there are also active piezo _speakers_ that look much the same.
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
 The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus.hex (right-click and download)
+
 The SH1106 version firmware file is called cyclop_plus_sh1106.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_sh1106.hex (right-click and download)
+
 If you do not install an OLED, you can use either binary.
 Check the format of the downloaded file. Each line should start with a colon character and only contain letters and numbers like this:
 
