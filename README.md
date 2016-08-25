@@ -66,10 +66,9 @@ Either buy another OLED or install a separate voltage regulator for the OLED.
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
 
 ##Attach an alarm buzzer(optional)
-This modification is intended to use an active 5 volt miniature buzzer. 
+This modification is intended to use a 5 volt buzzer. It does not matter if it is an active piezo busser or a passive piezo speaker.
 An example of a piezo buzzer is this:
 ![Buzzer Example](/images/buzzer.jpg)
-Please note that there are also active piezo _speakers_ that look much the same. These do not produce a tone automatically. Do not use one of these.
 - Solder the red wire comming from your buzzer to the solder point marked D6. If your buzzer does not have a red wire instead solder the leg marked with a + to the D6 solder pad.
 - Solder the other (black) wire to a ground point. The legs of the antenna contact as well as the square through hole solder island in the middle of the PCB are ground points.
 - Enable the Low Battery Alarm option in the configuration menu.
