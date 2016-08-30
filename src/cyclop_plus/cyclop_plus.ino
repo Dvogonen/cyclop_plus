@@ -50,6 +50,7 @@
 //******************************************************************************
 //* File scope function declarations
 
+void     activateScreenSaver( void );
 uint16_t autoScan( uint16_t frequency );
 uint16_t averageAnalogRead( uint8_t pin );
 void     batteryMeter(void);
@@ -58,7 +59,6 @@ void     dissolveDisplay(void);
 void     drawAutoScanScreen(void);
 void     drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value );
 void     drawChannelScreen( uint8_t channel, uint16_t rssi);
-void     drawEmptyScreen( void );
 void     drawOptionsScreen(uint8_t option );
 void     drawScannerScreen( void );
 void     drawStartScreen(void);
@@ -129,7 +129,7 @@ uint8_t alarmSoundOn = 0;
 uint16_t alarmOnPeriod = 0;
 uint16_t alarmOffPeriod = 0;
 uint8_t options[MAX_OPTIONS];
-boolean saveScreenActive = 0;
+uint8_t saveScreenActive = 0;
 
 //******************************************************************************
 //* function: setup
@@ -214,10 +214,8 @@ void loop()
       break;
 
     case SINGLE_CLICK: // up the frequency
-      if (!( options[SAVE_SCREEN_OPTION] && saveScreenActive )) { // Single click to wake up
-        currentChannel = nextChannel( currentChannel );
-        setRTC6715Frequency(getFrequency(currentChannel));
-      }
+      currentChannel = nextChannel( currentChannel );
+      setRTC6715Frequency(getFrequency(currentChannel));
       drawChannelScreen(currentChannel, 0);
       break;
 
@@ -234,7 +232,7 @@ void loop()
   // Check if the display needs updating
   if ( millis() > displayUpdateTimer ) {
     if ( options[SAVE_SCREEN_OPTION] && (saveScreenTimer < millis()))
-      drawEmptyScreen();
+      activateScreenSaver();
     else
     {
       currentRssi = averageAnalogRead(RSSI_PIN);
@@ -325,6 +323,13 @@ uint8_t getClickType(uint8_t buttonPin) {
   if (digitalRead(buttonPin) == !BUTTON_PRESSED)
     return ( NO_CLICK );
 
+  // If the screen saver is active the key press is just a wakeup call
+  if (saveScreenActive) {
+    saveScreenActive = 0;
+    while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
+    return ( NO_CLICK );
+  }
+
   while (digitalRead(buttonPin) == BUTTON_PRESSED) {
     timer++;
     delay(5);
@@ -343,7 +348,7 @@ uint8_t getClickType(uint8_t buttonPin) {
   }
   if (timer >= 40)                  // 40 * 5 ms = 0.2s
     return click_type;
-    
+
   if (digitalRead(buttonPin) == BUTTON_PRESSED ) {
     click_type = DOUBLE_CLICK;
     while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
@@ -839,8 +844,6 @@ void dissolveDisplay(void)
 void drawStartScreen( void ) {
   uint8_t i;
 
-  saveScreenActive = 0;
-
   display.clearDisplay();
   display.drawLine(0, 0, 127, 0, WHITE);
   display.setTextColor(WHITE);
@@ -873,8 +876,6 @@ void drawStartScreen( void ) {
 void drawChannelScreen( uint8_t channel, uint16_t rssi) {
   char buffer[22];
   uint8_t i;
-
-  saveScreenActive = 0;
 
   display.clearDisplay();
   display.setTextColor(WHITE);
@@ -911,7 +912,6 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
 //* function: drawAutoScanScreen
 //******************************************************************************
 void drawAutoScanScreen( void ) {
-  saveScreenActive = 0;
 
   display.clearDisplay();
   display.setTextColor(WHITE);
@@ -933,7 +933,6 @@ void drawAutoScanScreen( void ) {
 //* function: drawScannerScreen
 //******************************************************************************
 void drawScannerScreen( void ) {
-  saveScreenActive = 0;
 
   display.clearDisplay();
   display.drawLine(0, 55, 127, 55, WHITE);
@@ -954,8 +953,6 @@ void updateScannerScreen(uint8_t position, uint8_t value ) {
   // uint8_t i;
   static uint8_t last_position = 14;
   static uint8_t last_value = 0;
-
-  saveScreenActive = 0;
 
   // The scan graph only uses the 100 positions in the middle of the screen
   position = position + 14;
@@ -980,7 +977,6 @@ void updateScannerScreen(uint8_t position, uint8_t value ) {
 //*         : value = 0 to 100
 //******************************************************************************
 void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
-  saveScreenActive = 0;
 
   display.drawRect(3 + xPos,  0 + yPos, 4, 2, WHITE);
   display.drawRect(0 + xPos, 2 + yPos, 10, 20, WHITE);
@@ -1002,8 +998,6 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
 //******************************************************************************
 void drawOptionsScreen(uint8_t option ) {
   uint8_t i, j;
-
-  saveScreenActive = 0;
 
   display.clearDisplay();
   display.setCursor(0, 0);
@@ -1050,9 +1044,9 @@ void drawOptionsScreen(uint8_t option ) {
 }
 
 //******************************************************************************
-//* function: drawEmptyScreen
+//* function: activateScreenSaver
 //******************************************************************************
-void drawEmptyScreen( void)
+void activateScreenSaver( void)
 {
   display.clearDisplay();
   display.display();
