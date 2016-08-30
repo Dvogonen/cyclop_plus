@@ -1,4 +1,4 @@
-#CYCLOP+ v1.4
+#CYCLOP+ v1.5
 
 ###Introduction and Functions
 The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
@@ -11,6 +11,8 @@ No hardware alteration is necessary to use CYCLOP+. The OLED display modificatio
 * 1.2 Timing optimizations. First released version. 2016-06-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
 * 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
+* 1.5 One click wakeup. Not Yet Released
+
 
 ###Informative Links
 This is a short video introduction to the functionality (of v1.2):

@@ -129,7 +129,7 @@
 #define LED_ON            HIGH
 
 // Release information
-#define VER_DATE_STRING   "2016-08-20"
-#define VER_INFO_STRING   "v1.4 by Dvogonen"
+#define VER_DATE_STRING   "UNFINISHED"
+#define VER_INFO_STRING   "v1.5 by Dvogonen"
 
 #endif // cyclop_plus_h
