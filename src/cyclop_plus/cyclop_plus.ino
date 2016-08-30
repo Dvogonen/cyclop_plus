@@ -54,7 +54,7 @@ uint16_t autoScan( uint16_t frequency );
 uint16_t averageAnalogRead( uint8_t pin );
 void     batteryMeter(void);
 uint8_t  bestChannelMatch( uint16_t frequency );
-void     disolveDisplay(void);
+void     dissolveDisplay(void);
 void     drawAutoScanScreen(void);
 void     drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value );
 void     drawChannelScreen( uint8_t channel, uint16_t rssi);
@@ -806,11 +806,11 @@ void testAlarm( void ) {
 //* Screen functions
 //******************************************************************************
 //******************************************************************************
-//* function: disolveDisplay
-//*         : fancy graphics stuff that disolves the screen into black
+//* function: dissolveDisplay
+//*         : fancy graphics stuff that dissolves the screen into black
 //*         : unnecessary, but fun
 //******************************************************************************
-void disolveDisplay(void)
+void dissolveDisplay(void)
 {
   uint8_t x, y, i = 30;
   uint16_t j;
@@ -856,7 +856,7 @@ void drawStartScreen( void ) {
       return;
     delay(10);
   }
-  disolveDisplay();
+  dissolveDisplay();
   return;
 }
 
