@@ -120,6 +120,7 @@
 #define DOUBLE_CLICK      2
 #define LONG_CLICK        3
 #define LONG_LONG_CLICK   4
+#define WAKEUP_CLICK      5
 
 // Button pins go low or high on button clicks
 #define BUTTON_PRESSED    LOW

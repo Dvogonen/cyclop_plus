@@ -200,6 +200,9 @@ void loop()
     case NO_CLICK: // do nothing
       break;
 
+    case WAKEUP_CLICK:  // do nothing
+      break;
+
     case LONG_LONG_CLICK: // graphical band scanner
       currentChannel = bestChannelMatch(graphicScanner(getFrequency(currentChannel)));
       drawChannelScreen(currentChannel, 0);
@@ -225,7 +228,7 @@ void loop()
       drawChannelScreen(currentChannel, 0);
       break;
   }
-  // Reset screensaver timer after key click
+  // Reset screensaver timer after each key click
   if  (lastClick != NO_CLICK )
     saveScreenTimer = millis() + SAVE_SCREEN_DELAY_MS;
 
