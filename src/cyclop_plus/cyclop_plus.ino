@@ -330,7 +330,7 @@ uint8_t getClickType(uint8_t buttonPin) {
   if (saveScreenActive) {
     saveScreenActive = 0;
     while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
-    return ( NO_CLICK );
+    return ( WAKEUP_CLICK );
   }
 
   while (digitalRead(buttonPin) == BUTTON_PRESSED) {
