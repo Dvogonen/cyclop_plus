@@ -72,6 +72,11 @@ void     resetOptions(void);
 char    *shortNameOfChannel(uint8_t channel, char *name);
 void     setRTC6715Frequency(uint16_t frequency);
 void     setOptions( void );
+void     spi_0(void);
+void     spi_1(void);
+void     spiEnableHigh( void );
+void     spiEnableLow( void );
+int      spiRead( void );
 void     testAlarm( void );
 void     updateScannerScreen(uint8_t position, uint8_t value );
 void     writeEeprom(void);
@@ -554,6 +559,42 @@ char *longNameOfChannel(uint8_t channel, char *name)
 }
 
 //******************************************************************************
+//* function: readRTC6715Register  - NOT TESTED!
+//*         : Returns the contents of a given register in  long.
+//*         : The 20 LSB of the long is the register content. The rest is zero
+//*         : padding.
+//*
+//* SPI data: 4  bits  Register Address  LSB first
+//*         : 1  bit   Read or Write     0=Read 1=Write
+//*         : 20 bits  Register content
+//******************************************************************************
+long readRTC6715Register( uint8_t reg )
+{
+  long retVal = 0;
+  uint8_t i;
+
+  // Enable SPI
+  spiEnableHigh();
+  spiEnableLow();
+
+  // Address (4 LSB bits)
+  for (i = 4; i; i--, reg >>= 1 ) {
+    (reg & 0x1) ? spi_1() : spi_0();
+  }
+  // Read/Write bit
+  spi_0(); // Read
+
+  // Data (20 LSB bits)
+  for (i = 20; i; i--, retVal <<= 1 ) {
+    spiRead() ? retVal &= 0x01 : retVal &= 0x00;
+  }
+  // Disable SPI
+  spiEnableHigh();
+
+  return retVal;
+}
+
+//******************************************************************************
 //* function: calcFrequencyData
 //*         : calculates the frequency value for the syntheziser register B of
 //*         : the RTC6751 circuit that is used within the RX5808/RX5880 modules.
@@ -592,7 +633,7 @@ void setRTC6715Frequency(uint16_t frequency)
 
   // Bit bang the syntheziser register
 
-  // Clock
+  // Enable SPI pin
   spiEnableHigh();
   delayMicroseconds(1);
   spiEnableLow();
@@ -616,7 +657,7 @@ void setRTC6715Frequency(uint16_t frequency)
   spi_0();
   spi_0();
 
-  // Clock
+  // Disable SPI pin
   spiEnableHigh();
   delayMicroseconds(1);
 
@@ -628,7 +669,7 @@ void setRTC6715Frequency(uint16_t frequency)
 //******************************************************************************
 //* function: spi_1
 //******************************************************************************
-void spi_1()
+void spi_1( void )
 {
   digitalWrite(SPI_CLOCK_PIN, LOW);
   delayMicroseconds(1);
@@ -643,7 +684,7 @@ void spi_1()
 //******************************************************************************
 //* function: spi_0
 //******************************************************************************
-void spi_0()
+void spi_0( void )
 {
   digitalWrite(SPI_CLOCK_PIN, LOW);
   delayMicroseconds(1);
@@ -656,9 +697,25 @@ void spi_0()
 }
 
 //******************************************************************************
+//* function: spiRead  - NOT TESTED!
+//******************************************************************************
+int spiRead( void )
+{
+  int retVal;
+  digitalWrite(SPI_CLOCK_PIN, LOW);
+  delayMicroseconds(1);
+  digitalWrite(SPI_CLOCK_PIN, HIGH);
+  delayMicroseconds(1);
+  digitalWrite(SPI_CLOCK_PIN, LOW);
+  retVal = digitalRead(SPI_DATA_PIN);
+  delayMicroseconds(1);
+  return retVal;
+}
+
+//******************************************************************************
 //* function: spiEnableLow
 //******************************************************************************
-void spiEnableLow()
+void spiEnableLow( void )
 {
   delayMicroseconds(1);
   digitalWrite(SLAVE_SELECT_PIN, LOW);
@@ -668,7 +725,7 @@ void spiEnableLow()
 //******************************************************************************
 //* function: spiEnableHigh
 //******************************************************************************
-void spiEnableHigh()
+void spiEnableHigh( void )
 {
   delayMicroseconds(1);
   digitalWrite(SLAVE_SELECT_PIN, HIGH);
