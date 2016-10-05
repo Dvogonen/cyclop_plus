@@ -31,20 +31,20 @@ If you do not want to solder anything you can program the board by temporarily p
 The holes for the ICSP connector is found just to the right of the button switch.
 The pins should point upwards on the same side as the receiver tin can is installed.
 ![ICSP pin header](/images/pcb_icsp.jpg)
-The top left pin is VCC. 
- 
+The top left pin is VCC.
+
 ###Attach an OLED display(optional)
 - Solder a SSD1306 or SH1106 OLED 128x64 display with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
 
 These little display modules where popularized by Adafruit. They are very common today and clones from various producers are sold on eBay for around 5$.
-Do not buy one of the two-colored ones. 
+Do not buy one of the two-colored ones.
 You want a black and white display without any missing lines (the two-colored displays have slight space between the two color fields).
 Please note that you want a display with 4 pins. These use the I2C interface. You can not use the 6 pin variants.
 
 There are two different OLED screen types available that look the same.
-One type has a SSD1306 controller built in, while the other uses a SH1106 controller. 
+One type has a SSD1306 controller built in, while the other uses a SH1106 controller.
 These are not compatible and need different software.
 Chinese sellers on eBay often copy and paste text from other sellers and basically do not know what they sell.
 A lot of SH1106 OLED screens have been sold as SSD1306 screens lately.
@@ -65,7 +65,7 @@ A side effect of adjusting the regulator is that the main display is running on 
 If you are among the unlucky ones who have gotten an OLED that refuses to work on 3.3 volts and a main display that only works above 6 volts, you have to get inventive.
 Either buy another OLED or install a separate voltage regulator for the OLED.
 ![ICSP pin header](/images/pcb_33v_display.jpg)
-Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped. 
+Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped.
 
 ##Attach a low battery alarm buzzer(optional)
 Use a 5 volt piezzo buzzer. It does not matter if it is an active piezo buzzer or a passive piezo speaker.
@@ -78,7 +78,7 @@ A piezo buzzer looks like this this:
 ![Alarm Speaker Connection](/images/pcb_buzzer.jpg)
 
 ###Build CYCLOP+ (optional)
-- The project is built using the Arduino development environment. Download the Arduino development environment from www.arduino.cc.
+- The project is built using the Arduino development environment. Arduino 1.6.9 and 1.6.12 have been used successfully. Download the Arduino development environment from www.arduino.cc.
 - Install the development environment.
 - Download the CYCLOP+ source code from GitHub.
 - Navigate to the cyclop_plus.ino file and open it in the Arduino development environment.
