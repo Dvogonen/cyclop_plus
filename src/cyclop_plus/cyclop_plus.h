@@ -50,23 +50,25 @@
 #define FLIP_SCREEN_OPTION        0
 #define LIPO_2S_METER_OPTION      1
 #define LIPO_3S_METER_OPTION      2
-#define BATTERY_ALARM_OPTION      3
-#define SHOW_STARTSCREEN_OPTION   4
-#define SAVE_SCREEN_OPTION        5
+#define SHOW_STARTSCREEN_OPTION   3
+#define SAVE_SCREEN_OPTION        4
+#define BATTERY_ALARM_OPTION      5
+#define ALARM_LEVEL_OPTION        6
 
 #define FLIP_SCREEN_DEFAULT       1
 #define LIPO_2S_METER_DEFAULT     0
 #define LIPO_3S_METER_DEFAULT     1
-#define BATTERY_ALARM_DEFAULT     1
 #define SHOW_STARTSCREEN_DEFAULT  1
 #define SAVE_SCREEN_DEFAULT       0
+#define BATTERY_ALARM_DEFAULT     1
+#define ALARM_LEVEL_DEFAULT       32
 
-#define MAX_OPTIONS               6
+#define MAX_OPTIONS               7
 
 // User Configuration Commands
-#define TEST_ALARM_COMMAND        6
-#define RESET_SETTINGS_COMMAND    7
-#define EXIT_COMMAND              8
+#define TEST_ALARM_COMMAND        7
+#define RESET_SETTINGS_COMMAND    8
+#define EXIT_COMMAND              9
 #define MAX_COMMANDS              3
 
 // Number of lines in configuration menu
