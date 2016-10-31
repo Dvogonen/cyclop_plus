@@ -11,7 +11,7 @@ No hardware alteration is necessary to use CYCLOP+. The OLED display modificatio
 * 1.2 Timing optimizations. First released version. 2016-06-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
 * 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
-* 1.5 One click wakeup. Not Yet Released
+* 1.5 One click wakeup. Alarm level configuration. Not Yet Released
 
 
 ###Informative Links
@@ -133,7 +133,7 @@ When it goes black again the programming is done and the board can be mounted in
 - Hold down the button during power up to enter the system options screen.
 - Use single click and double click to navigate in the menu.
 - Use long click to select or unselect an option.
-- Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm.
+- Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm, alarm sound level.
 - Enabling the screen saver option makes the display go out 10 seconds after the last button press. Use this if the display is mounted inside the visor.
 - The settings are saved when the Exit option is selected. All changes are lost if the battery is disconnected before Exit has been selected.
 
