@@ -59,7 +59,7 @@ void     dissolveDisplay(void);
 void     drawAutoScanScreen(void);
 void     drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value );
 void     drawChannelScreen( uint8_t channel, uint16_t rssi);
-void     drawOptionsScreen(uint8_t option );
+void     drawOptionsScreen(uint8_t option, uint8_t in_edit_state);
 void     drawScannerScreen( void );
 void     drawStartScreen(void);
 uint8_t  getClickType(uint8_t buttonPin);
@@ -288,9 +288,10 @@ void resetOptions(void) {
   options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
   options[LIPO_2S_METER_OPTION]    = LIPO_2S_METER_DEFAULT;
   options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
-  options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
   options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
+  options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
+  options[ALARM_LEVEL_OPTION]      = ALARM_LEVEL_DEFAULT;
 }
 
 //******************************************************************************
@@ -802,49 +803,76 @@ void setOptions()
   uint8_t exitNow = false;
   uint8_t menuSelection = 0;
   uint8_t click = NO_CLICK;
+  uint8_t in_edit_state = 0;
 
   // Display option screen
-  drawOptionsScreen( menuSelection );
+  drawOptionsScreen( menuSelection, in_edit_state );
 
   // Let the user release the button
   getClickType( BUTTON_PIN );
 
   while ( !exitNow )
   {
-    drawOptionsScreen( menuSelection );
+    drawOptionsScreen( menuSelection, in_edit_state );
     click = getClickType( BUTTON_PIN );
-    switch ( click )
-    {
-      case NO_CLICK:        // do nothing
-        break;
 
-      case SINGLE_CLICK:    // Move to next option
-        menuSelection++;
-        if (menuSelection >= MAX_OPTIONS + MAX_COMMANDS)
-          menuSelection = 0;
-        break;
+    if (in_edit_state)
+      switch ( click )
+      {
+        case NO_CLICK:          // do nothing
+          break;
 
-      case DOUBLE_CLICK:    // Move to previous option
-        if (menuSelection == 0)
-          menuSelection = MAX_OPTIONS + MAX_COMMANDS - 1;
-        else
-          menuSelection--;
-        break;
+        case SINGLE_CLICK:      // Increase Option
+          if (menuSelection == ALARM_LEVEL_OPTION)
+            options[menuSelection]++;
+          else
+            options[menuSelection] = !options[menuSelection];
+          break;
 
-      case LONG_CLICK:     // Execute command or toggle option
-      case LONG_LONG_CLICK:
-        if (menuSelection == EXIT_COMMAND)
-          exitNow = true;
-        else if (menuSelection == RESET_SETTINGS_COMMAND)
-          resetOptions();
+        case DOUBLE_CLICK:      // Decrease Option
+          if (menuSelection == ALARM_LEVEL_OPTION)
+            options[menuSelection]--;
+          else
+            options[menuSelection] = !options[menuSelection];
+          break;
 
-        else if (menuSelection == TEST_ALARM_COMMAND) {
-          testAlarm();
-        }
-        else
-          options[menuSelection] = !options[menuSelection];
-        break;
-    }
+        case LONG_CLICK:        // Execute command or toggle option
+        case LONG_LONG_CLICK:
+          in_edit_state = 0;
+          break;
+      }
+    else
+      switch ( click )
+      {
+        case NO_CLICK:          // do nothing
+          break;
+
+        case SINGLE_CLICK:      // Move to next option
+          menuSelection++;
+          if (menuSelection >= MAX_OPTIONS + MAX_COMMANDS)
+            menuSelection = 0;
+          break;
+
+        case DOUBLE_CLICK:      // Move to previous option
+          if (menuSelection == 0)
+            menuSelection = MAX_OPTIONS + MAX_COMMANDS - 1;
+          else
+            menuSelection--;
+          break;
+
+        case LONG_CLICK:        // Execute command or edit option
+        case LONG_LONG_CLICK:
+          if (menuSelection == EXIT_COMMAND)
+            exitNow = true;
+          else if (menuSelection == RESET_SETTINGS_COMMAND)
+            resetOptions();
+          else if (menuSelection == TEST_ALARM_COMMAND) {
+            testAlarm();
+          }
+          else
+            in_edit_state = 1;
+          break;
+      }
   }
 }
 
@@ -1056,7 +1084,7 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
 //******************************************************************************
 //* function: drawOptionsScreen
 //******************************************************************************
-void drawOptionsScreen(uint8_t option ) {
+void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
   uint8_t i, j;
 
   display.clearDisplay();
@@ -1072,7 +1100,7 @@ void drawOptionsScreen(uint8_t option ) {
   {
     if (j >= (MAX_OPTIONS + MAX_COMMANDS))
       j = 0;
-    if (j == option) {
+    if (j == option && !in_edit_state) {
       display.setTextColor(BLACK, WHITE);
     }
     else {
@@ -1082,19 +1110,25 @@ void drawOptionsScreen(uint8_t option ) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
       case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
       case LIPO_3S_METER_OPTION:     display.print(F("LiPo 3s Meter   ")); break;
-      case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
       case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
       case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
-      case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
+      case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
+      case ALARM_LEVEL_OPTION:       display.print(F("Alarm Level     ")); break;
       case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
+      case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
-    if (j < MAX_OPTIONS) {
+    if (in_edit_state) {
+      display.setTextColor(BLACK, WHITE);
+    }
+    if (j == FLIP_SCREEN_OPTION || j == LIPO_2S_METER_OPTION || j == LIPO_3S_METER_OPTION || j == SHOW_STARTSCREEN_OPTION || j == SAVE_SCREEN_OPTION || j == BATTERY_ALARM_OPTION) {
       if (options[j])
         display.print(F(" ON "));
       else
         display.print(F(" OFF"));
     }
+    else if ( j == ALARM_LEVEL_OPTION)
+      display.print(options[j]);
     else
       display.print("    ");
 
