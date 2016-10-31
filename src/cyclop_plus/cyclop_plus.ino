@@ -267,7 +267,7 @@ void loop()
     if (millis() > alarmTimer) {
       alarmSoundOn = !alarmSoundOn;
       if (alarmSoundOn) {
-        analogWrite( ALARM_PIN, 32 );
+        analogWrite( ALARM_PIN, options[ALARM_LEVEL_OPTION] );
         alarmTimer = millis() + alarmOnPeriod;
       }
       else {
