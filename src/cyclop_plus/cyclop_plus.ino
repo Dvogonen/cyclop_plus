@@ -292,6 +292,7 @@ void resetOptions(void) {
   options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[ALARM_LEVEL_OPTION]      = ALARM_LEVEL_DEFAULT;
+  options[LOW_BAND_OPTION]         = LOW_BAND_DEFAULT;
 }
 
 //******************************************************************************
@@ -411,7 +412,7 @@ uint8_t bestChannelMatch( uint16_t frequency )
 
 //******************************************************************************
 //* function: graphicScanner
-//*         : scans the 5.8 GHz band in 3 MHz increments and draws a graphical
+//*         : scans the 5.8 GHz band in 3 or 6 MHz increments and draws a graphical
 //*         : representation. when the button is pressed the currently
 //*         : scanned frequency is returned.
 //******************************************************************************
@@ -428,14 +429,14 @@ uint16_t graphicScanner( uint16_t frequency ) {
   drawScannerScreen();
 
   while ((clickType = getClickType(BUTTON_PIN)) == NO_CLICK) {
-    scanFrequency += 3;
+    scanFrequency += SCANNING_STEP;
     if (scanFrequency > FREQUENCY_MAX)
       scanFrequency = FREQUENCY_MIN;
     setRTC6715Frequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
     rssiDisplayValue = (scanRssi - 140) / 10;    // Roughly 2 - 46
-    updateScannerScreen(100 - ((FREQUENCY_MAX - scanFrequency) / 3), rssiDisplayValue );
+    updateScannerScreen(100 - ((FREQUENCY_MAX - scanFrequency) / SCANNING_STEP), rssiDisplayValue );
   }
   // Fine tuning
   scanFrequency = scanFrequency - 20;
@@ -464,7 +465,7 @@ uint16_t autoScan( uint16_t frequency ) {
   uint16_t bestFrequency;
 
   // Skip 10 MHz forward to avoid detecting the current channel
-  scanFrequency = frequency + 10;
+  scanFrequency = frequency + SCANNING_STEP;
   if (!(scanFrequency % 2))
     scanFrequency++;        // RTC6715 can only generate odd frequencies
 
@@ -1027,7 +1028,10 @@ void drawScannerScreen( void ) {
   display.setTextColor(WHITE);
   display.setTextSize(1);
   display.setCursor(0, 57);
-  display.print(F("5.65     5.8     5.95"));
+  if ( options[LOW_BAND_OPTION] )
+    display.print(F("5.35     5.6     5.95"));
+  else
+    display.print(F("5.65     5.8     5.95"));
   updateScannerScreen(0, 0);
 }
 
@@ -1114,6 +1118,7 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
       case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
       case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
       case ALARM_LEVEL_OPTION:       display.print(F("Alarm Level     ")); break;
+      case LOW_BAND_OPTION:          display.print(F("Display Low Band")); break;
       case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
       case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
@@ -1121,7 +1126,7 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
     if (in_edit_state) {
       display.setTextColor(BLACK, WHITE);
     }
-    if (j == FLIP_SCREEN_OPTION || j == LIPO_2S_METER_OPTION || j == LIPO_3S_METER_OPTION || j == SHOW_STARTSCREEN_OPTION || j == SAVE_SCREEN_OPTION || j == BATTERY_ALARM_OPTION) {
+    if (j == FLIP_SCREEN_OPTION || j == LIPO_2S_METER_OPTION || j == LIPO_3S_METER_OPTION || j == SHOW_STARTSCREEN_OPTION || j == SAVE_SCREEN_OPTION || j == BATTERY_ALARM_OPTION || j == LOW_BAND_OPTION) {
       if (options[j])
         display.print(F(" ON "));
       else

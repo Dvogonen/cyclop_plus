@@ -54,6 +54,7 @@
 #define SAVE_SCREEN_OPTION        4
 #define BATTERY_ALARM_OPTION      5
 #define ALARM_LEVEL_OPTION        6
+#define LOW_BAND_OPTION           7
 
 #define FLIP_SCREEN_DEFAULT       1
 #define LIPO_2S_METER_DEFAULT     0
@@ -62,13 +63,14 @@
 #define SAVE_SCREEN_DEFAULT       0
 #define BATTERY_ALARM_DEFAULT     1
 #define ALARM_LEVEL_DEFAULT       32
+#define LOW_BAND_DEFAULT          1
 
-#define MAX_OPTIONS               7
+#define MAX_OPTIONS               8
 
 // User Configuration Commands
-#define TEST_ALARM_COMMAND        7
-#define RESET_SETTINGS_COMMAND    8
-#define EXIT_COMMAND              9
+#define TEST_ALARM_COMMAND        8
+#define RESET_SETTINGS_COMMAND    9
+#define EXIT_COMMAND             10
 #define MAX_COMMANDS              3
 
 // Number of lines in configuration menu
@@ -104,11 +106,14 @@
 #define RSSI_TRESHOLD     250
 
 // Channels in use 
-#define CHANNEL_MIN       0
-#define CHANNEL_MAX       39
+#define CHANNEL_MIN       (options[LOW_BAND_OPTION] ? 0 : 8)
+#define CHANNEL_MAX       47
+
+//* Frequency resolutions
+#define SCANNING_STEP     (options[LOW_BAND_OPTION] ? 6 : 3)
 
 // Max and Min frequencies
-#define FREQUENCY_MIN     5645
+#define FREQUENCY_MIN     (options[LOW_BAND_OPTION] ? 5345 : 5645)
 #define FREQUENCY_MAX     5945
 
 //EEPROM addresses
@@ -132,7 +137,7 @@
 #define LED_ON            HIGH
 
 // Release information
-#define VER_DATE_STRING   "UNFINISHED"
+#define VER_DATE_STRING   "2017-03-10"
 #define VER_INFO_STRING   "v1.5 by Dvogonen"
 
 #endif // cyclop_plus_h
