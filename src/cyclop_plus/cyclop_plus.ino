@@ -82,13 +82,14 @@ void     updateScannerScreen(uint8_t position, uint8_t value );
 void     writeEeprom(void);
 
 //******************************************************************************
-//* Positions in the frequency table for the 40 channels
+//* Positions in the frequency table for the 48 channels
 //* Direct access via array operations does not work since data is stored in
 //* flash, not in RAM. Use getPosition to retrieve data
 
 const uint8_t positions[] PROGMEM = {
-  19, 18, 32, 17, 33, 16,  7, 34,  8, 24,  6,  9, 25,  5, 35, 10, 26,  4, 11, 27,
-  3, 36, 12, 28,  2, 13, 29, 37,  1, 14, 30,  0, 15, 31, 38, 20, 21, 39, 22, 23
+  40, 41, 42, 43, 44, 45, 46, 47, 19, 32, 18, 17, 33, 16,  7, 34,
+   8, 24,  6,  9, 25,  5, 35, 10, 26,  4, 11, 27,  3, 36, 12, 28,
+   2, 13, 29, 37,  1, 14, 30,  0, 15, 31, 38, 20, 21, 39, 22, 23
 };
 
 uint16_t getPosition( uint8_t channel ) {
@@ -96,7 +97,7 @@ uint16_t getPosition( uint8_t channel ) {
 }
 
 //******************************************************************************
-//* Frequencies for the 40 channels
+//* Frequencies for the 48 channels
 //* Direct access via array operations does not work since data is stored in
 //* flash, not in RAM. Use getFrequency to retrieve data
 
@@ -105,7 +106,8 @@ const uint16_t channelFrequencies[] PROGMEM = {
   5733, 5752, 5771, 5790, 5809, 5828, 5847, 5866, // Band B - Boscam B
   5705, 5685, 5665, 5645, 5885, 5905, 5925, 5945, // Band E - DJI
   5740, 5760, 5780, 5800, 5820, 5840, 5860, 5880, // Band F - FatShark \ Immersion
-  5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917  // Band C - Raceband
+  5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917, // Band C - Raceband
+  5362, 5399, 5436, 5473, 5510, 5547, 5584, 5621  // Band L - Lowband
 };
 
 uint16_t getFrequency( uint8_t channel ) {
