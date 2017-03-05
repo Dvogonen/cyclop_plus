@@ -12,7 +12,7 @@
 
   The MIT License (MIT)
 
-  Copyright (c) 2016 Kjell Kernen (Dvogonen)
+  Copyright (c) 2017 Kjell Kernen (Dvogonen)
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -88,8 +88,8 @@ void     writeEeprom(void);
 
 const uint8_t positions[] PROGMEM = {
   40, 41, 42, 43, 44, 45, 46, 47, 19, 32, 18, 17, 33, 16,  7, 34,
-   8, 24,  6,  9, 25,  5, 35, 10, 26,  4, 11, 27,  3, 36, 12, 28,
-   2, 13, 29, 37,  1, 14, 30,  0, 15, 31, 38, 20, 21, 39, 22, 23
+  8, 24,  6,  9, 25,  5, 35, 10, 26,  4, 11, 27,  3, 36, 12, 28,
+  2, 13, 29, 37,  1, 14, 30,  0, 15, 31, 38, 20, 21, 39, 22, 23
 };
 
 uint16_t getPosition( uint8_t channel ) {
@@ -284,7 +284,7 @@ void loop()
 
 //******************************************************************************
 //* function: resetOptions
-//*         : All options are reset to their default values
+//*         : Resets all configuration settings to their default values
 //******************************************************************************
 void resetOptions(void) {
   options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
@@ -299,6 +299,7 @@ void resetOptions(void) {
 
 //******************************************************************************
 //* function: writeEeprom
+//*         : Writes all configuration settings to nonvolatile memory
 //******************************************************************************
 void writeEeprom(void) {
   uint8_t i;
@@ -310,6 +311,7 @@ void writeEeprom(void) {
 
 //******************************************************************************
 //* function: readEeprom
+//*         : Reads all configuration settings from nonvolatile memory
 //******************************************************************************
 bool readEeprom(void) {
   uint8_t i;
@@ -324,8 +326,8 @@ bool readEeprom(void) {
 //******************************************************************************
 //* function: get_click_type
 //*         : Polls the specified pin and returns the type of click that was
-//*         : performed NO_CLICK, SINGLE_CLICK, DOUBLE_CLICK, LONG_CLICK
-//*         : or LONG_LONG_CLICK
+//*         : performed NO_CLICK, SINGLE_CLICK, DOUBLE_CLICK, LONG_CLICK,
+//*         : LONG_LONG_CLICK or WAKEUP_CLICK
 //******************************************************************************
 uint8_t getClickType(uint8_t buttonPin) {
   uint16_t timer = 0;
@@ -334,13 +336,6 @@ uint8_t getClickType(uint8_t buttonPin) {
   // check if the key has been pressed
   if (digitalRead(buttonPin) == !BUTTON_PRESSED)
     return ( NO_CLICK );
-
-  // If the screen saver is active the key press is just a wakeup call
-  if (saveScreenActive) {
-    saveScreenActive = 0;
-    while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
-    return ( WAKEUP_CLICK );
-  }
 
   while (digitalRead(buttonPin) == BUTTON_PRESSED) {
     timer++;
@@ -353,6 +348,13 @@ uint8_t getClickType(uint8_t buttonPin) {
   if (timer >= 300)
     click_type = LONG_LONG_CLICK;
 
+  // If the screen saver is active the key press is just a wakeup call
+  if (saveScreenActive) {
+    saveScreenActive = 0;
+    if ( click_type == SINGLE_CLICK )
+      return ( WAKEUP_CLICK );
+  }
+  
   // Check if there is a second click
   timer = 0;
   while ((digitalRead(buttonPin) == !BUTTON_PRESSED) && (timer++ < 40)) {
@@ -414,9 +416,8 @@ uint8_t bestChannelMatch( uint16_t frequency )
 
 //******************************************************************************
 //* function: graphicScanner
-//*         : scans the 5.8 GHz band in 3 or 6 MHz increments and draws a graphical
-//*         : representation. when the button is pressed the currently
-//*         : scanned frequency is returned.
+//*         : scans the 5.8 GHz band and draws a graphical representation.
+//*         : when the button is pressed the current frequency is returned.
 //******************************************************************************
 uint16_t graphicScanner( uint16_t frequency ) {
   uint8_t i;
@@ -504,6 +505,7 @@ uint16_t autoScan( uint16_t frequency ) {
 }
 //******************************************************************************
 //* function: averageAnalogRead
+//*         : used to read from an anlog pin
 //*         : returns an averaged value between (in theory) 0 and 1024
 //*         : this function is called often, so it is speed optimized
 //******************************************************************************
@@ -532,8 +534,10 @@ char *shortNameOfChannel(uint8_t channel, char *name)
     name[0] = 'E';
   else if (channelIndex < 32)
     name[0] = 'F';
-  else
+  else if (channelIndex < 32)
     name[0] = 'R';
+  else
+    name[0] = 'L';
   name[1] = (channelIndex % 8) + '0' + 1;
   name[2] = 0;
   return name;
@@ -554,8 +558,10 @@ char *longNameOfChannel(uint8_t channel, char *name)
     strcpy(name, "Foxtech/DJI ");
   else if (channelIndex < 32)
     strcpy(name, "FatShark ");
-  else
+  else if (channelIndex < 40)
     strcpy(name, "Raceband ");
+  else
+    strcpy(name, "Lowband  ");
   len = strlen( name );
   name[len] = (channelIndex % 8) + '0' + 1;
   name[len + 1] = 0;
@@ -623,10 +629,10 @@ uint16_t calcFrequencyData( uint16_t frequency )
 //*         : please note that the synth register A is assumed to have default
 //*         : values.
 //*
-//* SPI data: 4  bits  Register Address  LSB first
-//*         : 1  bit   Read or Write     0=Read 1=Write
+//* SPI data:  4 bits  Register Address  LSB first
+//*         :  1 bit   Read or Write     0=Read 1=Write
 //*         : 13 bits  N-Register Data   LSB first
-//*         : 7  bits  A-Register        LSB first
+//*         :  7 bits  A-Register        LSB first
 //******************************************************************************
 void setRTC6715Frequency(uint16_t frequency)
 {
@@ -827,14 +833,24 @@ void setOptions()
 
         case SINGLE_CLICK:      // Increase Option
           if (menuSelection == ALARM_LEVEL_OPTION)
-            options[menuSelection]++;
+          {
+            if (options[ALARM_LEVEL_OPTION] == 0)
+              options[ALARM_LEVEL_OPTION] = 1;
+            else
+              options[ALARM_LEVEL_OPTION] = options[ALARM_LEVEL_OPTION] << 1;
+          }
           else
             options[menuSelection] = !options[menuSelection];
           break;
 
         case DOUBLE_CLICK:      // Decrease Option
           if (menuSelection == ALARM_LEVEL_OPTION)
-            options[menuSelection]--;
+          {
+            if (options[ALARM_LEVEL_OPTION] == 0)
+              options[ALARM_LEVEL_OPTION] = 128;
+            else
+              options[ALARM_LEVEL_OPTION] = options[ALARM_LEVEL_OPTION] >> 1;
+          }
           else
             options[menuSelection] = !options[menuSelection];
           break;
@@ -1106,11 +1122,9 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
   {
     if (j >= (MAX_OPTIONS + MAX_COMMANDS))
       j = 0;
+    display.setTextColor(WHITE, BLACK);
     if (j == option && !in_edit_state) {
       display.setTextColor(BLACK, WHITE);
-    }
-    else {
-      display.setTextColor(WHITE, BLACK);
     }
     switch (j) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
@@ -1125,17 +1139,21 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
       case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
-    if (in_edit_state) {
+    display.setTextColor(WHITE, BLACK); 
+    if (j == option && in_edit_state) {
       display.setTextColor(BLACK, WHITE);
     }
+    display.print(F(" "));
     if (j == FLIP_SCREEN_OPTION || j == LIPO_2S_METER_OPTION || j == LIPO_3S_METER_OPTION || j == SHOW_STARTSCREEN_OPTION || j == SAVE_SCREEN_OPTION || j == BATTERY_ALARM_OPTION || j == LOW_BAND_OPTION) {
       if (options[j])
-        display.print(F(" ON "));
+        display.print(F("ON "));
       else
-        display.print(F(" OFF"));
+        display.print(F("OFF"));
     }
-    else if ( j == ALARM_LEVEL_OPTION)
+    else if ( j == ALARM_LEVEL_OPTION )
+    {
       display.print(options[j]);
+    }
     else
       display.print("    ");
 

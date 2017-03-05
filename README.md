@@ -11,7 +11,7 @@ No hardware alteration is necessary to use CYCLOP+. The OLED display modificatio
 * 1.2 Timing optimizations. First released version. 2016-06-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
 * 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
-* 1.5 One click wakeup. Alarm level configuration. Not Yet Released
+* 1.5 Full 48 channel Low Band support added. One click wakeup. Alarm level configuration. 2017-03-10
 
 
 ###Informative Links
@@ -89,9 +89,9 @@ A piezo buzzer looks like this this:
 
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
-The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus.hex (right-click and download)
+The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_v0105.hex (right-click and download)
 
-The SH1106 version firmware file is called cyclop_plus_sh1106.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_sh1106.hex (right-click and download)
+The SH1106 version firmware file is called cyclop_plus_sh1106.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_sh1106_v0105.hex (right-click and download)
 
 If you do not install an OLED, you can use either binary.
 Check the format of the downloaded file. Each line should start with a colon character and only contain letters and numbers like this:
