@@ -63,6 +63,7 @@ void     drawOptionsScreen(uint8_t option, uint8_t in_edit_state);
 void     drawScannerScreen( void );
 void     drawStartScreen(void);
 uint8_t  getClickType(uint8_t buttonPin);
+uint16_t getVoltage( void );
 uint16_t graphicScanner( uint16_t frequency );
 char    *longNameOfChannel(uint8_t channel, char *name);
 uint8_t  nextChannel( uint8_t channel);
@@ -269,7 +270,7 @@ void loop()
     if (millis() > alarmTimer) {
       alarmSoundOn = !alarmSoundOn;
       if (alarmSoundOn) {
-        analogWrite( ALARM_PIN, options[ALARM_LEVEL_OPTION] );
+        analogWrite( ALARM_PIN, 1 << options[ALARM_LEVEL_OPTION] );
         alarmTimer = millis() + alarmOnPeriod;
       }
       else {
@@ -290,10 +291,11 @@ void resetOptions(void) {
   options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
   options[LIPO_2S_METER_OPTION]    = LIPO_2S_METER_DEFAULT;
   options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
-  options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
-  options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[ALARM_LEVEL_OPTION]      = ALARM_LEVEL_DEFAULT;
+  options[BATTERY_CALIB_OPTION]    = BATTERY_CALIB_DEFAULT;
+  options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
+  options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
   options[LOW_BAND_OPTION]         = LOW_BAND_DEFAULT;
 }
 
@@ -306,7 +308,7 @@ void writeEeprom(void) {
   EEPROM.write(EEPROM_CHANNEL, currentChannel);
   for (i = 0; i < MAX_OPTIONS; i++)
     EEPROM.write(EEPROM_OPTIONS + i, options[i]);
-  EEPROM.write(EEPROM_CHECK, 238);
+  EEPROM.write(EEPROM_CHECK, 239);
 }
 
 //******************************************************************************
@@ -315,7 +317,7 @@ void writeEeprom(void) {
 //******************************************************************************
 bool readEeprom(void) {
   uint8_t i;
-  if (EEPROM.read(EEPROM_CHECK) != 238)
+  if (EEPROM.read(EEPROM_CHECK) != 239)
     return false;
   currentChannel =   EEPROM.read(EEPROM_CHANNEL);
   for (i = 0; i < MAX_OPTIONS; i++)
@@ -354,7 +356,7 @@ uint8_t getClickType(uint8_t buttonPin) {
     if ( click_type == SINGLE_CLICK )
       return ( WAKEUP_CLICK );
   }
-  
+
   // Check if there is a second click
   timer = 0;
   while ((digitalRead(buttonPin) == !BUTTON_PRESSED) && (timer++ < 40)) {
@@ -741,16 +743,22 @@ void spiEnableHigh( void )
   digitalWrite(SLAVE_SELECT_PIN, HIGH);
   delayMicroseconds(1);
 }
-
+//******************************************************************************
+//* function: getVoltage
+//*         : returns battery voltage as an unsigned integer.
+//*         : The value is multiplied with 10, 12volts => 120, 7.2Volts => 72
+//*
+//*         : Measured voltage values:
+//*         : 12.6v = 639   10.8v = 546   8.4v = 411   7.2v = 359
+//*         : The result is not linear...
+//*         : A rough estimation is that 5 steps correspond to 0.1 volts
+//******************************************************************************
+uint16_t getVoltage( void )
+{
+  return ( 50 + (((averageAnalogRead(VOLTAGE_METER_PIN) - 250 + (options[BATTERY_CALIB_OPTION] - 128))) / 5 ));
+}
 //******************************************************************************
 //* function: batteryMeter
-//*         : Measured voltage values
-//*         : 3s LiPo
-//*         : max = 4.2v * 3 = 12.6v = 643
-//*         : min = 3.6v * 3 = 10.8v = 551
-//*         : 2s LiPo
-//*         : max = 4.2v * 2 = 8.4v = 429
-//*         : min = 3.6v * 2 = 7.2v = 367
 //******************************************************************************
 void batteryMeter( void )
 {
@@ -763,15 +771,17 @@ void batteryMeter( void )
   if (!options[LIPO_3S_METER_OPTION] && !options[LIPO_2S_METER_OPTION])
     return;
 
-  if (options[LIPO_3S_METER_OPTION]) {
-    minV = 551;
-    maxV = 643;
+  if (options[LIPO_3S_METER_OPTION])
+  {
+    minV = 105;
+    maxV = 126;
   }
-  if (options[LIPO_2S_METER_OPTION]) {
-    minV = 367;
-    maxV = 429;
+  if (options[LIPO_2S_METER_OPTION])
+  {
+    minV = 70;
+    maxV = 84;
   }
-  voltage = averageAnalogRead(VOLTAGE_METER_PIN);
+  voltage = getVoltage();
 
   if (voltage >= maxV)
     value = 99;
@@ -834,22 +844,29 @@ void setOptions()
         case SINGLE_CLICK:      // Increase Option
           if (menuSelection == ALARM_LEVEL_OPTION)
           {
-            if (options[ALARM_LEVEL_OPTION] == 0)
-              options[ALARM_LEVEL_OPTION] = 1;
-            else
-              options[ALARM_LEVEL_OPTION] = options[ALARM_LEVEL_OPTION] << 1;
+            if (options[ALARM_LEVEL_OPTION] < 8 )
+              options[ALARM_LEVEL_OPTION]++;
+          }
+          else if (menuSelection == BATTERY_CALIB_OPTION)
+          {
+            if (options[BATTERY_CALIB_OPTION] < 255)
+              options[BATTERY_CALIB_OPTION]++;
           }
           else
             options[menuSelection] = !options[menuSelection];
           break;
 
+
         case DOUBLE_CLICK:      // Decrease Option
           if (menuSelection == ALARM_LEVEL_OPTION)
           {
-            if (options[ALARM_LEVEL_OPTION] == 0)
-              options[ALARM_LEVEL_OPTION] = 128;
-            else
-              options[ALARM_LEVEL_OPTION] = options[ALARM_LEVEL_OPTION] >> 1;
+            if (options[ALARM_LEVEL_OPTION] > 1)
+              options[ALARM_LEVEL_OPTION]--;
+          }
+          else if (menuSelection == BATTERY_CALIB_OPTION)
+          {
+            if (options[BATTERY_CALIB_OPTION] > 0)
+              options[BATTERY_CALIB_OPTION]--;
           }
           else
             options[menuSelection] = !options[menuSelection];
@@ -1130,16 +1147,17 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
       case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
       case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
       case LIPO_3S_METER_OPTION:     display.print(F("LiPo 3s Meter   ")); break;
-      case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
-      case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
       case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
       case ALARM_LEVEL_OPTION:       display.print(F("Alarm Level     ")); break;
+      case BATTERY_CALIB_OPTION:     display.print(F("Battery Calib.  ")); break;
+      case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
+      case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
       case LOW_BAND_OPTION:          display.print(F("Display Low Band")); break;
       case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
       case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
       case EXIT_COMMAND:             display.print(F("Exit            ")); break;
     }
-    display.setTextColor(WHITE, BLACK); 
+    display.setTextColor(WHITE, BLACK);
     if (j == option && in_edit_state) {
       display.setTextColor(BLACK, WHITE);
     }
@@ -1153,6 +1171,12 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
     else if ( j == ALARM_LEVEL_OPTION )
     {
       display.print(options[j]);
+    }
+    else if ( j == BATTERY_CALIB_OPTION )
+    {
+      display.print(getVoltage() / 10);
+      display.print(F("."));
+      display.print(getVoltage() % 10);
     }
     else
       display.print("    ");
