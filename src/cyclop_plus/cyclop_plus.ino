@@ -773,12 +773,12 @@ void batteryMeter( void )
 
   if (options[LIPO_3S_METER_OPTION])
   {
-    minV = 105;
+    minV = 102;
     maxV = 126;
   }
   if (options[LIPO_2S_METER_OPTION])
   {
-    minV = 70;
+    minV = 68;
     maxV = 84;
   }
   voltage = getVoltage();
@@ -849,8 +849,8 @@ void setOptions()
           }
           else if (menuSelection == BATTERY_CALIB_OPTION)
           {
-            if (options[BATTERY_CALIB_OPTION] < 255)
-              options[BATTERY_CALIB_OPTION]++;
+            if (options[BATTERY_CALIB_OPTION] < 250)
+              options[BATTERY_CALIB_OPTION]+= 5;
           }
           else
             options[menuSelection] = !options[menuSelection];
@@ -865,8 +865,8 @@ void setOptions()
           }
           else if (menuSelection == BATTERY_CALIB_OPTION)
           {
-            if (options[BATTERY_CALIB_OPTION] > 0)
-              options[BATTERY_CALIB_OPTION]--;
+            if (options[BATTERY_CALIB_OPTION] > 5)
+              options[BATTERY_CALIB_OPTION]-=5;
           }
           else
             options[menuSelection] = !options[menuSelection];
