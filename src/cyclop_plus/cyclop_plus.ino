@@ -536,7 +536,7 @@ char *shortNameOfChannel(uint8_t channel, char *name)
     name[0] = 'E';
   else if (channelIndex < 32)
     name[0] = 'F';
-  else if (channelIndex < 32)
+  else if (channelIndex < 40)
     name[0] = 'R';
   else
     name[0] = 'L';
