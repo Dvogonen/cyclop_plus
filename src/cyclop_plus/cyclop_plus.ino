@@ -34,6 +34,7 @@
 ********************************************************************************/
 // Application includes
 #include "cyclop_plus.h"
+#include "rtc6715.h"
 
 // Library includes
 #include <avr/pgmspace.h>
@@ -71,7 +72,6 @@ uint8_t  previousChannel( uint8_t channel);
 bool     readEeprom(void);
 void     resetOptions(void);
 char    *shortNameOfChannel(uint8_t channel, char *name);
-void     setRTC6715Frequency(uint16_t frequency);
 void     setOptions( void );
 void     spi_0(void);
 void     spi_1(void);
@@ -138,6 +138,7 @@ uint16_t alarmOnPeriod = 0;
 uint16_t alarmOffPeriod = 0;
 uint8_t options[MAX_OPTIONS];
 uint8_t saveScreenActive = 0;
+rtc6715 receiver( SPI_CLOCK_PIN, SLAVE_SELECT_PIN, SPI_DATA_PIN );
 
 //******************************************************************************
 //* function: setup
@@ -155,11 +156,6 @@ void setup()
   // initialize alarm
   pinMode(ALARM_PIN, OUTPUT );
 
-  // SPI pins for RX control
-  pinMode (SLAVE_SELECT_PIN, OUTPUT);
-  pinMode (SPI_DATA_PIN, OUTPUT);
-  pinMode (SPI_CLOCK_PIN, OUTPUT);
-
   // Read current channel and options data from EEPROM
   if (!readEeprom()) {
     currentChannel = CHANNEL_MIN;
@@ -167,7 +163,7 @@ void setup()
   }
 
   // Start receiver
-  setRTC6715Frequency(getFrequency(currentChannel));
+  receiver.setFrequency(getFrequency(currentChannel));
 
   // Initialize the display
 #ifdef SSD1306_OLED_DRIVER
@@ -226,13 +222,13 @@ void loop()
 
     case SINGLE_CLICK: // up the frequency
       currentChannel = nextChannel( currentChannel );
-      setRTC6715Frequency(getFrequency(currentChannel));
+      receiver.setFrequency(getFrequency(currentChannel));
       drawChannelScreen(currentChannel, 0);
       break;
 
     case DOUBLE_CLICK:  // down the frequency
       currentChannel = previousChannel( currentChannel );
-      setRTC6715Frequency(getFrequency(currentChannel));
+      receiver.setFrequency(getFrequency(currentChannel));
       drawChannelScreen(currentChannel, 0);
       break;
   }
@@ -437,7 +433,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
     scanFrequency += SCANNING_STEP;
     if (scanFrequency > FREQUENCY_MAX)
       scanFrequency = FREQUENCY_MIN;
-    setRTC6715Frequency(scanFrequency);
+    receiver.setFrequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
     rssiDisplayValue = (scanRssi - 140) / 10;    // Roughly 2 - 46
@@ -446,7 +442,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
   // Fine tuning
   scanFrequency = scanFrequency - 20;
   for (i = 0; i < 20; i++, scanFrequency += 2) {
-    setRTC6715Frequency(scanFrequency);
+    receiver.setFrequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
     if (bestRssi < scanRssi) {
@@ -455,7 +451,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
     }
   }
   // Return the best frequency
-  setRTC6715Frequency(bestFrequency);
+  receiver.setFrequency(bestFrequency);
   return (bestFrequency);
 }
 
@@ -481,7 +477,7 @@ uint16_t autoScan( uint16_t frequency ) {
       scanFrequency += 5;
     else
       scanFrequency = FREQUENCY_MIN;
-    setRTC6715Frequency(scanFrequency);
+    receiver.setFrequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
     if (bestRssi < scanRssi) {
@@ -493,7 +489,7 @@ uint16_t autoScan( uint16_t frequency ) {
   scanFrequency = bestFrequency - 20;
   bestRssi = 0;
   for (i = 0; i < 20; i++, scanFrequency += 2) {
-    setRTC6715Frequency(scanFrequency);
+    receiver.setFrequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
     if (bestRssi < scanRssi) {
@@ -502,7 +498,7 @@ uint16_t autoScan( uint16_t frequency ) {
     }
   }
   // Return the best frequency
-  setRTC6715Frequency(bestFrequency);
+  receiver.setFrequency(bestFrequency);
   return (bestFrequency);
 }
 //******************************************************************************
@@ -570,179 +566,7 @@ char *longNameOfChannel(uint8_t channel, char *name)
   return name;
 }
 
-//******************************************************************************
-//* function: readRTC6715Register  - NOT TESTED!
-//*         : Returns the contents of a given register in  long.
-//*         : The 20 LSB of the long is the register content. The rest is zero
-//*         : padding.
-//*
-//* SPI data: 4  bits  Register Address  LSB first
-//*         : 1  bit   Read or Write     0=Read 1=Write
-//*         : 20 bits  Register content
-//******************************************************************************
-long readRTC6715Register( uint8_t reg )
-{
-  long retVal = 0;
-  uint8_t i;
 
-  // Enable SPI
-  spiEnableHigh();
-  spiEnableLow();
-
-  // Address (4 LSB bits)
-  for (i = 4; i; i--, reg >>= 1 ) {
-    (reg & 0x1) ? spi_1() : spi_0();
-  }
-  // Read/Write bit
-  spi_0(); // Read
-
-  // Data (20 LSB bits)
-  for (i = 20; i; i--, retVal <<= 1 ) {
-    spiRead() ? retVal &= 0x01 : retVal &= 0x00;
-  }
-  // Disable SPI
-  spiEnableHigh();
-
-  return retVal;
-}
-
-//******************************************************************************
-//* function: calcFrequencyData
-//*         : calculates the frequency value for the syntheziser register B of
-//*         : the RTC6751 circuit that is used within the RX5808/RX5880 modules.
-//*         : this value is inteded to be loaded to register at adress 1 via SPI
-//*         :
-//*  Formula: frequency = ( N*32 + A )*2 + 479
-//******************************************************************************
-uint16_t calcFrequencyData( uint16_t frequency )
-{
-  uint16_t N;
-  uint8_t A;
-  frequency = (frequency - 479) / 2;
-  N = frequency / 32;
-  A = frequency % 32;
-  return (N << 7) |  A;
-}
-
-//******************************************************************************
-//* function: setRTC6715Frequency
-//*         : for a given frequency the register setting for synth register B of
-//*         : the RTC6715 circuit is calculated and bitbanged via the SPI bus
-//*         : please note that the synth register A is assumed to have default
-//*         : values.
-//*
-//* SPI data:  4 bits  Register Address  LSB first
-//*         :  1 bit   Read or Write     0=Read 1=Write
-//*         : 13 bits  N-Register Data   LSB first
-//*         :  7 bits  A-Register        LSB first
-//******************************************************************************
-void setRTC6715Frequency(uint16_t frequency)
-{
-  uint16_t sRegB;
-  uint8_t i;
-
-  sRegB = calcFrequencyData(frequency);
-
-  // Bit bang the syntheziser register
-
-  // Enable SPI pin
-  spiEnableHigh();
-  delayMicroseconds(1);
-  spiEnableLow();
-
-  // Address (0x1)
-  spi_1();
-  spi_0();
-  spi_0();
-  spi_0();
-
-  // Read/Write (Write)
-  spi_1();
-
-  // Data (16 LSB bits)
-  for (i = 16; i; i--, sRegB >>= 1 ) {
-    (sRegB & 0x1) ? spi_1() : spi_0();
-  }
-  // Data zero padding
-  spi_0();
-  spi_0();
-  spi_0();
-  spi_0();
-
-  // Disable SPI pin
-  spiEnableHigh();
-  delayMicroseconds(1);
-
-  digitalWrite(SLAVE_SELECT_PIN, LOW);
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  digitalWrite(SPI_DATA_PIN, LOW);
-}
-
-//******************************************************************************
-//* function: spi_1
-//******************************************************************************
-void spi_1( void )
-{
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  delayMicroseconds(1);
-  digitalWrite(SPI_DATA_PIN, HIGH);
-  delayMicroseconds(1);
-  digitalWrite(SPI_CLOCK_PIN, HIGH);
-  delayMicroseconds(1);
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  delayMicroseconds(1);
-}
-
-//******************************************************************************
-//* function: spi_0
-//******************************************************************************
-void spi_0( void )
-{
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  delayMicroseconds(1);
-  digitalWrite(SPI_DATA_PIN, LOW);
-  delayMicroseconds(1);
-  digitalWrite(SPI_CLOCK_PIN, HIGH);
-  delayMicroseconds(1);
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  delayMicroseconds(1);
-}
-
-//******************************************************************************
-//* function: spiRead  - NOT TESTED!
-//******************************************************************************
-int spiRead( void )
-{
-  int retVal;
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  delayMicroseconds(1);
-  digitalWrite(SPI_CLOCK_PIN, HIGH);
-  delayMicroseconds(1);
-  digitalWrite(SPI_CLOCK_PIN, LOW);
-  retVal = digitalRead(SPI_DATA_PIN);
-  delayMicroseconds(1);
-  return retVal;
-}
-
-//******************************************************************************
-//* function: spiEnableLow
-//******************************************************************************
-void spiEnableLow( void )
-{
-  delayMicroseconds(1);
-  digitalWrite(SLAVE_SELECT_PIN, LOW);
-  delayMicroseconds(1);
-}
-
-//******************************************************************************
-//* function: spiEnableHigh
-//******************************************************************************
-void spiEnableHigh( void )
-{
-  delayMicroseconds(1);
-  digitalWrite(SLAVE_SELECT_PIN, HIGH);
-  delayMicroseconds(1);
-}
 //******************************************************************************
 //* function: getVoltage
 //*         : returns battery voltage as an unsigned integer.
