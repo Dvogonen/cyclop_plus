@@ -48,6 +48,7 @@
 #endif
 #include <Adafruit_GFX.h>
 
+
 //******************************************************************************
 //* File scope function declarations
 
@@ -107,12 +108,29 @@ const uint16_t channelFrequencies[] PROGMEM = {
   5733, 5752, 5771, 5790, 5809, 5828, 5847, 5866, // Band B - Boscam B
   5705, 5685, 5665, 5645, 5885, 5905, 5925, 5945, // Band E - DJI
   5740, 5760, 5780, 5800, 5820, 5840, 5860, 5880, // Band F - FatShark \ Immersion
-  5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917, // Band C - Raceband
+  5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917, // Band R - Raceband
   5362, 5399, 5436, 5473, 5510, 5547, 5584, 5621  // Band L - Lowband
 };
 
 uint16_t getFrequency( uint8_t channel ) {
   return pgm_read_word_near(channelFrequencies + getPosition(channel));
+}
+//******************************************************************************
+//* Reverse lookup for frequencies in position table
+//* Direct access via array operations does not work since data is stored in
+//* flash, not in RAM. Use getRevesePositions to retrieve data
+
+const unsigned int reversePositions[] PROGMEM = {
+  39, 36, 32, 28, 25, 21, 18, 14, // Band A - Boscam A
+  16, 19, 23, 26, 30, 33, 37, 40, // Band B - Boscam B
+  13, 11, 10,  8, 43, 44, 46, 47, // Band E - DJI
+  17, 20, 24, 27, 31, 34, 38, 41, // Band F - FatShark \ Immersion
+  9,  12, 15, 22, 29, 35, 42, 45, // Band R - Raceband
+  0,   1,  2,  3,  4,  5,  6,  7  // Band L - Lowband
+};
+
+unsigned int getReversePosition( unsigned char position ) {
+  return pgm_read_word_near(reversePositions + position);
 }
 
 //******************************************************************************
@@ -139,12 +157,15 @@ uint16_t alarmOffPeriod = 0;
 uint8_t options[MAX_OPTIONS];
 uint8_t saveScreenActive = 0;
 rtc6715 receiver( SPI_CLOCK_PIN, SLAVE_SELECT_PIN, SPI_DATA_PIN );
+unsigned char softPositions[48];
 
 //******************************************************************************
 //* function: setup
 //******************************************************************************
 void setup()
 {
+  int i;
+
   // initialize LED pin
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LED_ON);
@@ -188,10 +209,37 @@ void setup()
   if (options[SHOW_STARTSCREEN_OPTION])
     drawStartScreen();
 
+  // Mark blocked channels in the softPositions array
+  for (i = 0; i < 48; i++)
+    softPositions[i] = positions[i];
+
+  if (!options[A_BAND_OPTION]) {
+    for (i = 0; i < 8; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[B_BAND_OPTION]) {
+    for (i = 8; i < 16; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[E_BAND_OPTION]) {
+    for (i = 16; i < 24; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[F_BAND_OPTION]) {
+    for (i = 24; i < 32; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[R_BAND_OPTION]) {
+    for (i = 32; i < 40; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[L_BAND_OPTION]) {
+    for (i = 40; i < 48; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+
   // Wait at least the delay time before entering screen save mode
   saveScreenTimer = millis() + SAVE_SCREEN_DELAY_MS;
-
-  return;
 }
 
 //******************************************************************************
@@ -285,14 +333,18 @@ void loop()
 //******************************************************************************
 void resetOptions(void) {
   options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
-  options[LIPO_2S_METER_OPTION]    = LIPO_2S_METER_DEFAULT;
-  options[LIPO_3S_METER_OPTION]    = LIPO_3S_METER_DEFAULT;
   options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
   options[ALARM_LEVEL_OPTION]      = ALARM_LEVEL_DEFAULT;
+  options[BATTERY_TYPE_OPTION]     = BATTERY_TYPE_DEFAULT;
   options[BATTERY_CALIB_OPTION]    = BATTERY_CALIB_DEFAULT;
   options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
   options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
-  options[LOW_BAND_OPTION]         = LOW_BAND_DEFAULT;
+  options[A_BAND_OPTION]           = A_BAND_DEFAULT;
+  options[B_BAND_OPTION]           = B_BAND_DEFAULT;
+  options[E_BAND_OPTION]           = E_BAND_DEFAULT;
+  options[F_BAND_OPTION]           = F_BAND_DEFAULT;
+  options[R_BAND_OPTION]           = R_BAND_DEFAULT;
+  options[L_BAND_OPTION]           = L_BAND_DEFAULT;
 }
 
 //******************************************************************************
@@ -304,7 +356,7 @@ void writeEeprom(void) {
   EEPROM.write(EEPROM_CHANNEL, currentChannel);
   for (i = 0; i < MAX_OPTIONS; i++)
     EEPROM.write(EEPROM_OPTIONS + i, options[i]);
-  EEPROM.write(EEPROM_CHECK, 239);
+  EEPROM.write(EEPROM_CHECK, VER_EEPROM);
 }
 
 //******************************************************************************
@@ -313,7 +365,7 @@ void writeEeprom(void) {
 //******************************************************************************
 bool readEeprom(void) {
   uint8_t i;
-  if (EEPROM.read(EEPROM_CHECK) != 239)
+  if (EEPROM.read(EEPROM_CHECK) != VER_EEPROM)
     return false;
   currentChannel =   EEPROM.read(EEPROM_CHANNEL);
   for (i = 0; i < MAX_OPTIONS; i++)
@@ -371,7 +423,7 @@ uint8_t getClickType(uint8_t buttonPin) {
 //******************************************************************************
 //* function: nextChannel
 //******************************************************************************
-uint8_t nextChannel(uint8_t channel)
+unsigned char incrementChannel(unsigned char channel)
 {
   if (channel > (CHANNEL_MAX - 1))
     return CHANNEL_MIN;
@@ -379,15 +431,34 @@ uint8_t nextChannel(uint8_t channel)
     return channel + 1;
 }
 
+unsigned char nextChannel(unsigned char channel)
+{
+  do {
+    channel = incrementChannel( channel);
+  } while (softPositions[channel] == 255);
+  return channel;
+}
+
 //******************************************************************************
 //* function: previousChannel
 //******************************************************************************
-uint8_t previousChannel(uint8_t channel)
+unsigned char decrementChannel(unsigned char channel)
 {
-  if ((channel > CHANNEL_MAX) || (channel == CHANNEL_MIN))
+  if (channel > CHANNEL_MAX)
     return CHANNEL_MAX;
-  else
-    return channel - 1;
+
+  if ( channel == CHANNEL_MIN )
+    return CHANNEL_MAX;
+
+  return channel - 1;
+}
+
+unsigned char previousChannel(unsigned char channel)
+{
+  do {
+    channel = decrementChannel( channel );
+  } while (softPositions[channel] == 255);
+  return channel;
 }
 
 //******************************************************************************
@@ -465,7 +536,7 @@ uint16_t autoScan( uint16_t frequency ) {
   uint16_t scanFrequency;
   uint16_t bestFrequency;
 
-  // Skip 10 MHz forward to avoid detecting the current channel
+  // Skip forward to avoid detecting the current channel
   scanFrequency = frequency + SCANNING_STEP;
   if (!(scanFrequency % 2))
     scanFrequency++;        // RTC6715 can only generate odd frequencies
@@ -473,8 +544,8 @@ uint16_t autoScan( uint16_t frequency ) {
   // Coarse tuning
   bestFrequency = scanFrequency;
   for (i = 0; i < 60 && (scanRssi < RSSI_TRESHOLD); i++) {
-    if ( scanFrequency <= (FREQUENCY_MAX - 5))
-      scanFrequency += 5;
+    if ( scanFrequency <= (FREQUENCY_MAX - SCANNING_STEP))
+      scanFrequency += SCANNING_STEP;
     else
       scanFrequency = FREQUENCY_MIN;
     receiver.setFrequency(scanFrequency);
@@ -566,7 +637,6 @@ char *longNameOfChannel(uint8_t channel, char *name)
   return name;
 }
 
-
 //******************************************************************************
 //* function: getVoltage
 //*         : returns battery voltage as an unsigned integer.
@@ -591,19 +661,15 @@ void batteryMeter( void )
   uint16_t minV;
   uint16_t maxV;
 
-  // Do no calculations if the meter should not be displayed
-  if (!options[LIPO_3S_METER_OPTION] && !options[LIPO_2S_METER_OPTION])
-    return;
-
-  if (options[LIPO_3S_METER_OPTION])
-  {
-    minV = 102;
-    maxV = 126;
-  }
-  if (options[LIPO_2S_METER_OPTION])
-  {
+  if (options[BATTERY_TYPE_OPTION])
+  { /* 2s lipo battery*/
     minV = 68;
     maxV = 84;
+  }
+  else
+  { /* 3s lipo battery */
+    minV = 102;
+    maxV = 126;
   }
   voltage = getVoltage();
 
@@ -674,7 +740,7 @@ void setOptions()
           else if (menuSelection == BATTERY_CALIB_OPTION)
           {
             if (options[BATTERY_CALIB_OPTION] < 250)
-              options[BATTERY_CALIB_OPTION]+= 5;
+              options[BATTERY_CALIB_OPTION] += 5;
           }
           else
             options[menuSelection] = !options[menuSelection];
@@ -690,7 +756,7 @@ void setOptions()
           else if (menuSelection == BATTERY_CALIB_OPTION)
           {
             if (options[BATTERY_CALIB_OPTION] > 5)
-              options[BATTERY_CALIB_OPTION]-=5;
+              options[BATTERY_CALIB_OPTION] -= 5;
           }
           else
             options[menuSelection] = !options[menuSelection];
@@ -887,7 +953,7 @@ void drawScannerScreen( void ) {
   display.setTextColor(WHITE);
   display.setTextSize(1);
   display.setCursor(0, 57);
-  if ( options[LOW_BAND_OPTION] )
+  if ( options[L_BAND_OPTION] )
     display.print(F("5.35     5.6     5.95"));
   else
     display.print(F("5.65     5.8     5.95"));
@@ -947,65 +1013,89 @@ void drawBattery(uint8_t xPos, uint8_t yPos, uint8_t value ) {
 //******************************************************************************
 //* function: drawOptionsScreen
 //******************************************************************************
+void drawOption(uint8_t option)
+{
+  if ( option == ALARM_LEVEL_OPTION )
+  {
+    display.print("   ");
+    display.print(options[option]);
+  }
+  else if ( option == BATTERY_TYPE_OPTION )
+  {
+    if (options[option])
+      display.print(F("  2s"));
+    else
+      display.print(F("  3s"));
+  }
+  else if ( option == BATTERY_CALIB_OPTION )
+  {
+    display.print(getVoltage() / 10);
+    display.print(F("."));
+    display.print(getVoltage() % 10);
+  }
+  else if (option == TEST_ALARM_COMMAND || option == RESET_SETTINGS_COMMAND || option == EXIT_COMMAND )
+  {
+    display.print("    ");
+  }
+  else
+  {
+    if (options[option])
+      display.print(F("  ON"));
+    else
+      display.print(F(" OFF"));
+  }
+}
+
 void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
   uint8_t i, j;
-
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.setTextSize(1);
-
-  if (option != 0)
-    j = option - 1;
+  if ( in_edit_state ) {
+    display.setCursor( 17 * 6, 1 * 8 );
+    display.setTextColor(BLACK, WHITE);
+    drawOption( option );
+  }
   else
-    j = MAX_OPTIONS + MAX_COMMANDS - 1;
-
-  for (i = 0; i < MAX_OPTION_LINES; i++, j++)
   {
-    if (j >= (MAX_OPTIONS + MAX_COMMANDS))
-      j = 0;
-    display.setTextColor(WHITE, BLACK);
-    if (j == option && !in_edit_state) {
-      display.setTextColor(BLACK, WHITE);
-    }
-    switch (j) {
-      case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
-      case LIPO_2S_METER_OPTION:     display.print(F("LiPo 2s Meter   ")); break;
-      case LIPO_3S_METER_OPTION:     display.print(F("LiPo 3s Meter   ")); break;
-      case BATTERY_ALARM_OPTION:     display.print(F("Battery Alarm   ")); break;
-      case ALARM_LEVEL_OPTION:       display.print(F("Alarm Level     ")); break;
-      case BATTERY_CALIB_OPTION:     display.print(F("Battery Calib.  ")); break;
-      case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
-      case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
-      case LOW_BAND_OPTION:          display.print(F("Display Low Band")); break;
-      case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
-      case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
-      case EXIT_COMMAND:             display.print(F("Exit            ")); break;
-    }
-    display.setTextColor(WHITE, BLACK);
-    if (j == option && in_edit_state) {
-      display.setTextColor(BLACK, WHITE);
-    }
-    display.print(F(" "));
-    if (j == FLIP_SCREEN_OPTION || j == LIPO_2S_METER_OPTION || j == LIPO_3S_METER_OPTION || j == SHOW_STARTSCREEN_OPTION || j == SAVE_SCREEN_OPTION || j == BATTERY_ALARM_OPTION || j == LOW_BAND_OPTION) {
-      if (options[j])
-        display.print(F("ON "));
-      else
-        display.print(F("OFF"));
-    }
-    else if ( j == ALARM_LEVEL_OPTION )
-    {
-      display.print(options[j]);
-    }
-    else if ( j == BATTERY_CALIB_OPTION )
-    {
-      display.print(getVoltage() / 10);
-      display.print(F("."));
-      display.print(getVoltage() % 10);
-    }
-    else
-      display.print("    ");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(1);
 
-    display.println();
+    if (option != 0)
+      j = option - 1;
+    else
+      j = MAX_OPTIONS + MAX_COMMANDS - 1;
+
+    for (i = 0; i < MAX_OPTION_LINES; i++, j++)
+    {
+      if (j >= (MAX_OPTIONS + MAX_COMMANDS))
+        j = 0;
+  
+      if (j == option)
+        display.setTextColor(BLACK, WHITE);
+      else
+        display.setTextColor(WHITE, BLACK);
+      
+      switch (j) {
+        case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen      ")); break;
+        case BATTERY_ALARM_OPTION:     display.print(F("Battery alarm    ")); break;
+        case ALARM_LEVEL_OPTION:       display.print(F("Alarm level      ")); break;
+        case BATTERY_TYPE_OPTION:      display.print(F("Battery Type     ")); break;
+        case BATTERY_CALIB_OPTION:     display.print(F("Battery Calib.   ")); break;
+        case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen ")); break;
+        case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver     ")); break;
+        case A_BAND_OPTION:            display.print(F("Boscam A band    ")); break;
+        case B_BAND_OPTION:            display.print(F("Boscam B band    ")); break;
+        case E_BAND_OPTION:            display.print(F("Foxtech/DJI band ")); break;
+        case F_BAND_OPTION:            display.print(F("Fatshark band    ")); break;
+        case R_BAND_OPTION:            display.print(F("Race Band        ")); break;
+        case L_BAND_OPTION:            display.print(F("Low Band         ")); break;
+        case TEST_ALARM_COMMAND:       display.print(F("Test Alarm       ")); break;
+        case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings   ")); break;
+        case EXIT_COMMAND:             display.print(F("Exit             ")); break;
+      }
+      display.setTextColor(WHITE, BLACK);
+      drawOption( j );
+      display.println();
+    }
   }
   display.display();
 }

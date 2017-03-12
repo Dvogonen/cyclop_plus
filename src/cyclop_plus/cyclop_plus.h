@@ -48,31 +48,39 @@
 
 // User Configuration Options
 #define FLIP_SCREEN_OPTION        0
-#define LIPO_2S_METER_OPTION      1
-#define LIPO_3S_METER_OPTION      2
-#define BATTERY_ALARM_OPTION      3
-#define ALARM_LEVEL_OPTION        4
-#define BATTERY_CALIB_OPTION      5 
-#define SHOW_STARTSCREEN_OPTION   6
-#define SAVE_SCREEN_OPTION        7
-#define LOW_BAND_OPTION           8
+#define BATTERY_ALARM_OPTION      1
+#define ALARM_LEVEL_OPTION        2
+#define BATTERY_TYPE_OPTION       3
+#define BATTERY_CALIB_OPTION      4 
+#define SHOW_STARTSCREEN_OPTION   5
+#define SAVE_SCREEN_OPTION        6
+#define A_BAND_OPTION             7
+#define B_BAND_OPTION             8
+#define E_BAND_OPTION             9 
+#define F_BAND_OPTION             10
+#define R_BAND_OPTION             11
+#define L_BAND_OPTION             12
 
-#define FLIP_SCREEN_DEFAULT       1
-#define LIPO_2S_METER_DEFAULT     0
-#define LIPO_3S_METER_DEFAULT     1
-#define BATTERY_ALARM_DEFAULT     1
-#define ALARM_LEVEL_DEFAULT       5
-#define BATTERY_CALIB_DEFAULT     128
-#define SHOW_STARTSCREEN_DEFAULT  1
-#define SAVE_SCREEN_DEFAULT       0
-#define LOW_BAND_DEFAULT          1
+#define FLIP_SCREEN_DEFAULT       1   /* On */
+#define BATTERY_ALARM_DEFAULT     1   /* On */
+#define ALARM_LEVEL_DEFAULT       5   /* Value 1-8 */
+#define BATTERY_TYPE_DEFAULT      0   /* 0=3s, 1=2s   */
+#define BATTERY_CALIB_DEFAULT     128 /* 0 */
+#define SHOW_STARTSCREEN_DEFAULT  1   /* Yes */
+#define SAVE_SCREEN_DEFAULT       0   /* No */
+#define A_BAND_DEFAULT            1   /* On */
+#define B_BAND_DEFAULT            1   /* On */
+#define E_BAND_DEFAULT            1   /* On */
+#define F_BAND_DEFAULT            1   /* On */
+#define R_BAND_DEFAULT            1   /* On */
+#define L_BAND_DEFAULT            1   /* On */
 
-#define MAX_OPTIONS               9
+#define MAX_OPTIONS               13
 
 // User Configuration Commands
-#define TEST_ALARM_COMMAND        9
-#define RESET_SETTINGS_COMMAND   10
-#define EXIT_COMMAND             11
+#define TEST_ALARM_COMMAND        13
+#define RESET_SETTINGS_COMMAND    14
+#define EXIT_COMMAND              15
 #define MAX_COMMANDS              3
 
 // Number of lines in configuration menu
@@ -108,14 +116,14 @@
 #define RSSI_TRESHOLD     250
 
 // Channels in use 
-#define CHANNEL_MIN       (options[LOW_BAND_OPTION] ? 0 : 8)
+#define CHANNEL_MIN       (options[L_BAND_OPTION] ? 0 : 8)
 #define CHANNEL_MAX       47
 
 //* Frequency resolutions
-#define SCANNING_STEP     (options[LOW_BAND_OPTION] ? 6 : 3)
+#define SCANNING_STEP     (options[L_BAND_OPTION] ? 6 : 3)
 
 // Max and Min frequencies
-#define FREQUENCY_MIN     (options[LOW_BAND_OPTION] ? 5345 : 5645)
+#define FREQUENCY_MIN     (options[L_BAND_OPTION] ? 5345 : 5645)
 #define FREQUENCY_MAX     5945
 
 //EEPROM addresses
@@ -139,7 +147,8 @@
 #define LED_ON            HIGH
 
 // Release information
-#define VER_DATE_STRING   "2017-03-10"
-#define VER_INFO_STRING   "v1.5 by Dvogonen"
+#define VER_DATE_STRING   "2017-03-13"
+#define VER_INFO_STRING   "v1.6 by Dvogonen"
+#define VER_EEPROM        240
 
 #endif // cyclop_plus_h
