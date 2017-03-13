@@ -132,12 +132,11 @@
 #define EEPROM_CHECK      (EEPROM_OPTIONS + MAX_OPTIONS)
 
 // click types
-#define NO_CLICK          0
-#define SINGLE_CLICK      1
-#define DOUBLE_CLICK      2
-#define LONG_CLICK        3
-#define LONG_LONG_CLICK   4
-#define WAKEUP_CLICK      5
+#define NO_CLICK              0
+#define SINGLE_CLICK          1
+#define DOUBLE_CLICK          2
+#define LONG_CLICK            3
+#define WAKEUP_CLICK          4
 
 // Button pins go low or high on button clicks
 #define BUTTON_PRESSED    LOW

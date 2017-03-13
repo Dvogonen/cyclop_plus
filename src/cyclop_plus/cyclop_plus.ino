@@ -47,7 +47,7 @@
 #include "libraries/adafruit_sh1106/Adafruit_SH1106.h"
 #endif
 #include <Adafruit_GFX.h>
-
+#include <EnableInterrupt.h>
 
 //******************************************************************************
 //* File scope function declarations
@@ -56,6 +56,7 @@ void     activateScreenSaver( void );
 uint16_t autoScan( uint16_t frequency );
 uint16_t averageAnalogRead( uint8_t pin );
 void     batteryMeter(void);
+void     buttonPressInterrupt();
 uint8_t  bestChannelMatch( uint16_t frequency );
 void     dissolveDisplay(void);
 void     drawAutoScanScreen(void);
@@ -144,6 +145,9 @@ Adafruit_SH1106 display(4);
 uint8_t lastClick = NO_CLICK;
 uint8_t currentChannel = 0;
 uint8_t lastChannel = 0;
+uint8_t lastFunction = 255;
+uint8_t clickType = NO_CLICK;
+unsigned long pauseStart = 0;
 uint16_t currentRssi = 0;
 uint8_t ledState = LED_ON;
 unsigned long saveScreenTimer;
@@ -171,8 +175,8 @@ void setup()
   digitalWrite(LED_PIN, LED_ON);
 
   // initialize button pin
-  pinMode(BUTTON_PIN, INPUT);
-  digitalWrite(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  enableInterrupt(BUTTON_PIN, buttonPressInterrupt, CHANGE);
 
   // initialize alarm
   pinMode(ALARM_PIN, OUTPUT );
@@ -255,17 +259,29 @@ void loop()
     case WAKEUP_CLICK:  // do nothing
       break;
 
-    case LONG_LONG_CLICK: // graphical band scanner
-      currentChannel = bestChannelMatch(graphicScanner(getFrequency(currentChannel)));
-      drawChannelScreen(currentChannel, 0);
-      displayUpdateTimer = millis() +  RSSI_STABILITY_DELAY_MS ;
-      break;
-
-    case LONG_CLICK:      // auto search
-      drawAutoScanScreen();
-      currentChannel = bestChannelMatch(autoScan(getFrequency(currentChannel)));
-      drawChannelScreen(currentChannel, 0);
-      displayUpdateTimer = millis() +  RSSI_STABILITY_DELAY_MS ;
+    case LONG_CLICK:
+      while ( lastFunction )
+        switch (lastFunction = selectFunction())
+        {
+          case 1:
+            currentChannel = bestChannelMatch(graphicScanner(getFrequency(currentChannel)));
+            drawChannelScreen(currentChannel, 0);
+            displayUpdateTimer = millis() +  RSSI_STABILITY_DELAY_MS ;
+            break;
+          case 2:
+            drawAutoScanScreen();
+            currentChannel = bestChannelMatch(autoScan(getFrequency(currentChannel)));
+            drawChannelScreen(currentChannel, 0);
+            displayUpdateTimer = millis() +  RSSI_STABILITY_DELAY_MS ;
+            break;
+          case 3:
+            setOptions();
+            writeEeprom();
+            if (options[FLIP_SCREEN_OPTION])
+              display.setRotation(2);
+            break;
+        }
+      lastFunction = 255;
       break;
 
     case SINGLE_CLICK: // up the frequency
@@ -374,50 +390,53 @@ bool readEeprom(void) {
 }
 
 //******************************************************************************
-//* function: get_click_type
-//*         : Polls the specified pin and returns the type of click that was
-//*         : performed NO_CLICK, SINGLE_CLICK, DOUBLE_CLICK, LONG_CLICK,
-//*         : LONG_LONG_CLICK or WAKEUP_CLICK
+//* function: buttonPressInterrupt
+//******************************************************************************
+void buttonPressInterrupt() {
+  static long clickStart = 0;
+
+  if ( digitalRead(BUTTON_PIN) == BUTTON_PRESSED ) {// Button was pressed
+    clickStart = millis();
+  }
+  else {   // Button was released
+    if ( pauseStart) {
+      clickType = DOUBLE_CLICK;
+      clickStart = 0;
+      pauseStart = 0;
+    }
+    else
+    {
+      if ( saveScreenActive ) {
+        clickType = WAKEUP_CLICK;
+        clickStart = 0;
+        saveScreenActive = 0;
+      }
+      else if (( millis() - clickStart) > 350 )
+        clickType = LONG_CLICK;
+      else
+        clickType = SINGLE_CLICK;
+      clickStart = 0;
+      pauseStart = millis();
+    }
+  }
+}
+
+//******************************************************************************
+//* function: getClickType
 //******************************************************************************
 uint8_t getClickType(uint8_t buttonPin) {
-  uint16_t timer = 0;
-  uint8_t click_type = NO_CLICK;
+  uint8_t tempClickType = NO_CLICK;
 
-  // check if the key has been pressed
-  if (digitalRead(buttonPin) == !BUTTON_PRESSED)
-    return ( NO_CLICK );
+  if (pauseStart && (millis() - pauseStart) < 350)
+    return NO_CLICK;
 
-  while (digitalRead(buttonPin) == BUTTON_PRESSED) {
-    timer++;
-    delay(5);
+  pauseStart = 0;
+
+  if ( clickType ) {
+    tempClickType = clickType;
+    clickType = NO_CLICK;
   }
-  if (timer < 120)                  // 120 * 5 ms = 0.6s
-    click_type = SINGLE_CLICK;
-  if (timer >= 80 && timer < 300 )  // 300 * 5 ms = 1.5s
-    click_type = LONG_CLICK;
-  if (timer >= 300)
-    click_type = LONG_LONG_CLICK;
-
-  // If the screen saver is active the key press is just a wakeup call
-  if (saveScreenActive) {
-    saveScreenActive = 0;
-    if ( click_type == SINGLE_CLICK )
-      return ( WAKEUP_CLICK );
-  }
-
-  // Check if there is a second click
-  timer = 0;
-  while ((digitalRead(buttonPin) == !BUTTON_PRESSED) && (timer++ < 40)) {
-    delay(5);
-  }
-  if (timer >= 40)                  // 40 * 5 ms = 0.2s
-    return click_type;
-
-  if (digitalRead(buttonPin) == BUTTON_PRESSED ) {
-    click_type = DOUBLE_CLICK;
-    while (digitalRead(buttonPin) == BUTTON_PRESSED) ;
-  }
-  return (click_type);
+  return tempClickType;
 }
 
 //******************************************************************************
@@ -604,7 +623,7 @@ char *shortNameOfChannel(uint8_t channel, char *name)
   else if (channelIndex < 32)
     name[0] = 'F';
   else if (channelIndex < 40)
-    name[0] = 'R';
+    name[0] = 'C';
   else
     name[0] = 'L';
   name[1] = (channelIndex % 8) + '0' + 1;
@@ -763,7 +782,6 @@ void setOptions()
           break;
 
         case LONG_CLICK:        // Execute command or toggle option
-        case LONG_LONG_CLICK:
           in_edit_state = 0;
           break;
       }
@@ -787,7 +805,6 @@ void setOptions()
           break;
 
         case LONG_CLICK:        // Execute command or edit option
-        case LONG_LONG_CLICK:
           if (menuSelection == EXIT_COMMAND)
             exitNow = true;
           else if (menuSelection == RESET_SETTINGS_COMMAND)
@@ -822,6 +839,26 @@ void testAlarm( void ) {
     analogWrite( ALARM_PIN, 0 );  delay(ALARM_MAX_OFF);
   }
   analogWrite( ALARM_PIN, 0 );
+}
+
+//******************************************************************************
+//* function: selectFunction
+//******************************************************************************
+uint8_t selectFunction(void)
+{
+  uint8_t function = 0;
+  uint8_t lastClick = NO_CLICK;
+  do
+  {
+    drawFunctionScreen( function );
+    lastClick = getClickType( BUTTON_PIN );
+    if (lastClick == SINGLE_CLICK)
+      function == 3 ? function = 0 : function++;
+    if (lastClick == DOUBLE_CLICK)
+      function == 0 ? function = 3 : function--;
+  }
+  while ( lastClick != LONG_CLICK );
+  return ( function );
 }
 
 //******************************************************************************
@@ -923,10 +960,35 @@ void drawChannelScreen( uint8_t channel, uint16_t rssi) {
 }
 
 //******************************************************************************
+//* function: drawFunctionScreen
+//******************************************************************************
+#define XPOS  14
+#define YPOS  14
+uint8_t drawFunctionScreen( uint8_t function )
+{
+  display.fillRect(9, 9, 110, 46, BLACK);
+  display.drawRect(10, 10, 108, 44, WHITE);
+  display.setTextSize(1);
+  display.setCursor(XPOS, YPOS);
+  display.setTextColor(function == 0 ? BLACK : WHITE, function == 0 ? WHITE : BLACK);
+  display.print(F(" Exit            "));
+  display.setCursor(XPOS, YPOS + 9);
+  display.setTextColor(function == 1 ? BLACK : WHITE, function == 1 ? WHITE : BLACK);
+  display.print(F(" Graphic Scanner "));
+  display.setCursor(XPOS, YPOS + 18);
+  display.setTextColor(function == 2 ? BLACK : WHITE, function == 2 ? WHITE : BLACK);
+  display.print(F(" Auto Scanner    "));
+  display.setCursor(XPOS, YPOS + 27);
+  display.setTextColor(function == 3 ? BLACK : WHITE, function == 3 ? WHITE : BLACK);
+  display.print(F(" Options         "));
+  display.display();
+}
+
+//******************************************************************************
 //* function: drawAutoScanScreen
 //******************************************************************************
-void drawAutoScanScreen( void ) {
-
+void drawAutoScanScreen( void )
+{
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.setCursor(10, 0);
@@ -1068,31 +1130,32 @@ void drawOptionsScreen(uint8_t option, uint8_t in_edit_state ) {
     {
       if (j >= (MAX_OPTIONS + MAX_COMMANDS))
         j = 0;
-  
+
       if (j == option)
         display.setTextColor(BLACK, WHITE);
       else
         display.setTextColor(WHITE, BLACK);
-      
+
       switch (j) {
-        case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen      ")); break;
-        case BATTERY_ALARM_OPTION:     display.print(F("Battery alarm    ")); break;
-        case ALARM_LEVEL_OPTION:       display.print(F("Alarm level      ")); break;
-        case BATTERY_TYPE_OPTION:      display.print(F("Battery Type     ")); break;
-        case BATTERY_CALIB_OPTION:     display.print(F("Battery Calib.   ")); break;
-        case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen ")); break;
-        case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver     ")); break;
-        case A_BAND_OPTION:            display.print(F("Boscam A band    ")); break;
-        case B_BAND_OPTION:            display.print(F("Boscam B band    ")); break;
-        case E_BAND_OPTION:            display.print(F("Foxtech/DJI band ")); break;
-        case F_BAND_OPTION:            display.print(F("Fatshark band    ")); break;
-        case R_BAND_OPTION:            display.print(F("Race Band        ")); break;
-        case L_BAND_OPTION:            display.print(F("Low Band         ")); break;
-        case TEST_ALARM_COMMAND:       display.print(F("Test Alarm       ")); break;
-        case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings   ")); break;
-        case EXIT_COMMAND:             display.print(F("Exit             ")); break;
+        case FLIP_SCREEN_OPTION:       display.print(F("Flip Screen     ")); break;
+        case BATTERY_ALARM_OPTION:     display.print(F("Battery alarm   ")); break;
+        case ALARM_LEVEL_OPTION:       display.print(F("Alarm level     ")); break;
+        case BATTERY_TYPE_OPTION:      display.print(F("Battery Type    ")); break;
+        case BATTERY_CALIB_OPTION:     display.print(F("Battery Calib.  ")); break;
+        case SHOW_STARTSCREEN_OPTION:  display.print(F("Show Startscreen")); break;
+        case SAVE_SCREEN_OPTION:       display.print(F("Screen Saver    ")); break;
+        case A_BAND_OPTION:            display.print(F("Boscam A band   ")); break;
+        case B_BAND_OPTION:            display.print(F("Boscam B band   ")); break;
+        case E_BAND_OPTION:            display.print(F("Foxtech/DJI band")); break;
+        case F_BAND_OPTION:            display.print(F("Fatshark band   ")); break;
+        case R_BAND_OPTION:            display.print(F("Race Band       ")); break;
+        case L_BAND_OPTION:            display.print(F("Low Band        ")); break;
+        case TEST_ALARM_COMMAND:       display.print(F("Test Alarm      ")); break;
+        case RESET_SETTINGS_COMMAND:   display.print(F("Reset Settings  ")); break;
+        case EXIT_COMMAND:             display.print(F("Exit            ")); break;
       }
       display.setTextColor(WHITE, BLACK);
+      display.print(F(" "));
       drawOption( j );
       display.println();
     }
