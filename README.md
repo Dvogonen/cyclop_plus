@@ -86,16 +86,16 @@ A piezo buzzer looks like this this:
 - Download the CYCLOP+ source code from GitHub.
 - Navigate to the cyclop_plus.ino file and open it in the Arduino development environment.
 - Download the two external LCD libraries (Adafruit GFX and Adafruit SSD1306). This is done within the Arduino environment.
+- If you compile for SSD1306 you must select display type by editing the library file Adafruit_SSD1306.h. You have to locate the file within the Arduino library download folder. Look for the "#define SSD1306_128_64" statement. It must not be commented out in the source file.
 - Download the EnableInterrupt library. This is done within the Arduino environment.
-- Select display type by editing Adafruit_SSD1306.h. You have to locate the file within the Arduino library download folder. Look for the "#define SSD1306_128_64" statement.
 - Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the Arduino IDE "Tool" menu.
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
 ###Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
-The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_v0105.hex (right-click and download)
+The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_v0106.hex (right-click and download)
 
-The SH1106 version firmware file is called cyclop_plus_sh1106.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_sh1106_v0105.hex (right-click and download)
+The SH1106 version firmware file is called cyclop_plus_sh1106.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_sh1106_v0106.hex (right-click and download)
 
 If you do not install an OLED, you can use either binary.
 Check the format of the downloaded file. Each line should start with a colon character and only contain letters and numbers like this:
@@ -141,7 +141,7 @@ When it goes black again the programming is done and the board can be mounted in
 - In menues: A short click increments or moves forward. A double click decrements or moves backward. A long click executes functions or is used to enter/depart.
 - Use the menu to start the Graphical Scanner, the Auto Scanner or enter into the Options Menu.  
 - Auto Scanner: Performs an autoscan for the best channel, just like a single click does in the original firmware.
-- Graphical Scanner: Triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Hold down the button again to select a frequency.
+- Graphical Scanner: Triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Click the button again to select a frequency.
 
 ###Options Menu
 - Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm, alarm sound level.
