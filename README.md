@@ -1,17 +1,20 @@
-#CYCLOP+ v1.5
+#CYCLOP+ v1.6
 
 ###Introduction and Functions
 The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second major function is to add support for an external OLED display that information can be presented to the user.
-No hardware alteration is necessary to use CYCLOP+. The OLED display modification is optional. The buzzer modification is also optional.
+The third is to add a graphical scanner for the complete 5.8 GHz band. This includes the low channels on the low band.
+Installation of an OLED display was optional in version 1.5 and lower. Due to the added complexity of the user interface, an OLED display is a requirement to use version 1.6 and later of CYCLOP+.
+A battery warning buzzer may be attached. That modification is optional.
 
 ###Version History
-* 1.0 Initial dev version, not released
-* 1.1 Functionly complete dev version, not released
-* 1.2 Timing optimizations. First released version. 2016-06-20
-* 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
-* 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
+* 1.6 Favourite band selection, Improved button timing, menu based interface - WORK IN PROGRESS - NOT YET RELEASED
 * 1.5 Full 48 channel Low Band support added. One click wakeup. Alarm level configuration. 2017-03-10
+* 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
+* 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
+* 1.2 Timing optimizations. First released version. 2016-06-20
+* 1.1 Functionly complete dev version, not released
+* 1.0 Initial dev version, not released
 
 
 ###Informative Links
@@ -33,7 +36,7 @@ The pins should point upwards on the same side as the receiver tin can is instal
 ![ICSP pin header](/images/pcb_icsp.jpg)
 The top left pin is VCC.
 
-###Attach an OLED display(optional)
+###Attach an OLED display
 - Solder a SSD1306 or SH1106 OLED 128x64 display with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
@@ -78,13 +81,14 @@ A piezo buzzer looks like this this:
 ![Alarm Speaker Connection](/images/pcb_buzzer.jpg)
 
 ###Build CYCLOP+ (optional)
-- The project is built using the Arduino development environment. Arduino 1.6.9 and 1.6.12 have been used successfully. Download the Arduino development environment from www.arduino.cc.
+- The project is built using the Arduino development environment.  Download the Arduino development environment from www.arduino.cc. Arduino 1.6.9 and 1.6.12 have been used successfully. WARNING There is a problem with the latest Arduino versions that results in a segmentation error when compiling the librrary for SH1106. This was discovered using Arduino 1.8.1. Use a slightly older version of the IDE until the problem has been fixed.
 - Install the development environment.
 - Download the CYCLOP+ source code from GitHub.
 - Navigate to the cyclop_plus.ino file and open it in the Arduino development environment.
 - Download the two external LCD libraries (Adafruit GFX and Adafruit SSD1306). This is done within the Arduino environment.
-- Select display type by editing Adafruit_SSD1306.h. Look at line 42 in the file.
-- Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the "Tool" menu.
+- Download the EnableInterrupt library. This is done within the Arduino environment.
+- Select display type by editing Adafruit_SSD1306.h. You have to locate the file within the Arduino library download folder. Look for the "#define SSD1306_128_64" statement.
+- Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the Arduino IDE "Tool" menu.
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
 ###Load CYCLOP+
@@ -129,22 +133,24 @@ Execute a write.
 - If everything is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so.
 When it goes black again the programming is done and the board can be mounted in the googles.
 
-###Configure CYCLOP+
-- Hold down the button during power up to enter the system options screen.
-- Use single click and double click to navigate in the menu.
-- Use long click to select or unselect an option.
-- Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm, alarm sound level.
-- Enabling the screen saver option makes the display go out 10 seconds after the last button press. Use this if the display is mounted inside the visor.
-- The settings are saved when the Exit option is selected. All changes are lost if the battery is disconnected before Exit has been selected.
 
 ###Use CYCLOP+
-- A single click jumps up in frequency to the closest channel among the 40 available.
-- A double click jumps down in frequency
-- A long click (0.6 - 2 seconds) triggers a autoscan for the best channel, just like a single click does in the original firmware.
-- A long-long click (> 2 seconds) triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Hold down the button again when the channel you want to use flickers onto the main display.
+- A single click jumps up in frequency to the closest higher channel among the 48 available.
+- A double click jumps down in frequency.
+- A long click (longer than 0.5 seconds) brings up a menu.
+- In menues: A short click increments or moves forward. A double click decrements or moves backward. A long click executes functions or is used to enter/depart.
+- Use the menu to start the Graphical Scanner, the Auto Scanner or enter into the Options Menu.  
+- Auto Scanner: Performs an autoscan for the best channel, just like a single click does in the original firmware.
+- Graphical Scanner: Triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Hold down the button again to select a frequency.
+
+###Options Menu
+- Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm, alarm sound level.
+- Enabling the screen saver option makes the display go out 10 seconds after the last button press. Use this if the display is mounted inside the visor.
+- It is possible to turn the use of individual bands On or Off. If a band is turned Off it will not be available for manual stepping. The idea is to be able to limit frequency stepping to the band you are using and ignore all other frequencies. All frequencies are however available for both Grahical Scanning and Auto Scanning. The exception to this rule is the Low Band. This band takes up as much bandwidth as all the others combined. If the Low Band is turned Off, the scan functions for it is also turned Off. The reason is that this doubles the resolution of frequency scans. 
+- The settings are saved when the Exit option is selected. All changes are lost if the battery is disconnected before Exit has been selected.
 
 ###Words of Warning
-Use of the FW is completely on your own risk.
+Use of the FW is on your own risk.
 You have to dismantle the googles to program the receiver with a so called ISP (alternatively called ICSP) programmer.
 It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3 volt wire coming from the programmer) to the wrong pin.
 Other types of wiring errors will lead to the programmer not working, but will probably not destroy anything.
