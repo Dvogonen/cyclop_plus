@@ -1,4 +1,4 @@
-#CYCLOP+ v1.6
+#CYCLOP+ v1.6 
 The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second major function is to add support for an external OLED display that information can be presented to the user.
 The third is to add a graphical scanner for the complete 5.8 GHz band. This includes the low channels on the low band.
@@ -6,7 +6,7 @@ Installation of an OLED display was optional in version 1.5 and lower. Due to th
 A battery warning buzzer may be attached. That modification is optional.
 
 ###Version History
-* 1.6 Favourite band selection, Improved button timing, menu based interface - WORK IN PROGRESS - NOT YET RELEASED
+* 1.6 Favourite band selection, Improved button timing, menu based interface - 2017-03-14
 * 1.5 Full 48 channel Low Band support added. One click wakeup. Alarm level configuration. 2017-03-10
 * 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
@@ -130,7 +130,6 @@ Select "Intel Hex" as format in the Flash box.
 Execute a write.
 - If everything is set up correctly the LED on the receiver board next to the ISP pin header will light up for a minute or so.
 When it goes black again the programming is done and the board can be mounted in the googles.
-
 
 ###Use CYCLOP+
 - A single click jumps up in frequency to the closest higher channel among the 48 available.
