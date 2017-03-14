@@ -79,7 +79,7 @@ void     spi_0(void);
 void     spi_1(void);
 void     spiEnableHigh( void );
 void     spiEnableLow( void );
-int      spiRead( void );
+int16_t  spiRead( void );
 void     testAlarm( void );
 void     updateScannerScreen(uint8_t position, uint8_t value );
 void     writeEeprom(void);
@@ -121,7 +121,7 @@ uint16_t getFrequency( uint8_t channel ) {
 //* Direct access via array operations does not work since data is stored in
 //* flash, not in RAM. Use getRevesePositions to retrieve data
 
-const unsigned int reversePositions[] PROGMEM = {
+const uint16_t reversePositions[] PROGMEM = {
   39, 36, 32, 28, 25, 21, 18, 14, // Band A - Boscam A
   16, 19, 23, 26, 30, 33, 37, 40, // Band B - Boscam B
   13, 11, 10,  8, 43, 44, 46, 47, // Band E - DJI
@@ -130,7 +130,7 @@ const unsigned int reversePositions[] PROGMEM = {
   0,   1,  2,  3,  4,  5,  6,  7  // Band L - Lowband
 };
 
-unsigned int getReversePosition( unsigned char position ) {
+uint16_t getReversePosition( uint8_t position ) {
   return pgm_read_word_near(reversePositions + position);
 }
 
@@ -142,34 +142,35 @@ Adafruit_SSD1306 display(4);
 #ifdef SH1106_OLED_DRIVER
 Adafruit_SH1106 display(4);
 #endif
-uint8_t lastClick = NO_CLICK;
-uint8_t currentChannel = 0;
-uint8_t lastChannel = 0;
-uint8_t lastFunction = 255;
-uint8_t clickType = NO_CLICK;
-unsigned long pauseStart = 0;
+
+uint8_t  lastClick = NO_CLICK;
+uint8_t  currentChannel = 0;
+uint8_t  lastChannel = 0;
+uint8_t  clickType = NO_CLICK;
+uint8_t  ledState = LED_ON;
+uint8_t  alarmSoundOn = 0;
+uint8_t  options[MAX_OPTIONS];
+uint8_t  saveScreenActive = 0;
+uint8_t  softPositions[48];
+
 uint16_t currentRssi = 0;
-uint8_t ledState = LED_ON;
-unsigned long saveScreenTimer;
-unsigned long displayUpdateTimer = 0;
-unsigned long eepromSaveTimer = 0;
-unsigned long pulseTimer = 0;
-unsigned long alarmTimer = 0;
-uint8_t alarmSoundOn = 0;
 uint16_t alarmOnPeriod = 0;
 uint16_t alarmOffPeriod = 0;
-uint8_t options[MAX_OPTIONS];
-uint8_t saveScreenActive = 0;
-rtc6715 receiver( SPI_CLOCK_PIN, SLAVE_SELECT_PIN, SPI_DATA_PIN );
-unsigned char softPositions[48];
+uint32_t pauseStart = 0;
+uint32_t saveScreenTimer;
+
+uint32_t displayUpdateTimer = 0;
+uint32_t eepromSaveTimer = 0;
+uint32_t pulseTimer = 0;
+uint32_t alarmTimer = 0;
+
+rtc6715  receiver( SPI_CLOCK_PIN, SLAVE_SELECT_PIN, SPI_DATA_PIN );
 
 //******************************************************************************
 //* function: setup
 //******************************************************************************
 void setup()
 {
-  int i;
-
   // initialize LED pin
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LED_ON);
@@ -231,8 +232,7 @@ void loop()
       break;
 
     case LONG_CLICK:
-      while ( lastFunction )
-        switch (lastFunction = selectFunction())
+        switch (selectFunction())
         {
           case 1:
             currentChannel = bestChannelMatch(graphicScanner(getFrequency(currentChannel)));
@@ -252,7 +252,6 @@ void loop()
               display.setRotation(2);
             break;
         }
-      lastFunction = 255;
       break;
 
     case SINGLE_CLICK: // up the frequency
@@ -342,6 +341,8 @@ bool readEeprom(void) {
 
 //******************************************************************************
 //* function: buttonPressInterrupt
+//*         : This function is called when the button interrupt fires.
+//*         : This happens both on button down and button up
 //******************************************************************************
 void buttonPressInterrupt() {
   static long clickStart = 0;
@@ -349,7 +350,7 @@ void buttonPressInterrupt() {
   if ( digitalRead(BUTTON_PIN) == BUTTON_PRESSED ) {// Button was pressed
     clickStart = millis();
   }
-  else {   // Button was released
+  else {                                            // Button was released
     if ( pauseStart) {
       clickType = DOUBLE_CLICK;
       clickStart = 0;
@@ -393,7 +394,7 @@ uint8_t getClickType(uint8_t buttonPin) {
 //******************************************************************************
 //* function: nextChannel
 //******************************************************************************
-unsigned char incrementChannel(unsigned char channel)
+uint8_t incrementChannel(uint8_t channel)
 {
   if (channel > (CHANNEL_MAX - 1))
     return CHANNEL_MIN;
@@ -401,7 +402,7 @@ unsigned char incrementChannel(unsigned char channel)
     return channel + 1;
 }
 
-unsigned char nextChannel(unsigned char channel)
+uint8_t nextChannel(uint8_t channel)
 {
   do {
     channel = incrementChannel( channel);
@@ -412,7 +413,7 @@ unsigned char nextChannel(unsigned char channel)
 //******************************************************************************
 //* function: previousChannel
 //******************************************************************************
-unsigned char decrementChannel(unsigned char channel)
+uint8_t decrementChannel(uint8_t channel)
 {
   if (channel > CHANNEL_MAX)
     return CHANNEL_MAX;
@@ -423,7 +424,7 @@ unsigned char decrementChannel(unsigned char channel)
   return channel - 1;
 }
 
-unsigned char previousChannel(unsigned char channel)
+uint8_t previousChannel(uint8_t channel)
 {
   do {
     channel = decrementChannel( channel );
@@ -459,13 +460,13 @@ uint8_t bestChannelMatch( uint16_t frequency )
 //*         : when the button is pressed the current frequency is returned.
 //******************************************************************************
 uint16_t graphicScanner( uint16_t frequency ) {
-  uint8_t i;
+  uint8_t  i;
+  uint8_t  clickType;
+  uint8_t  rssiDisplayValue;
   uint16_t scanRssi;
   uint16_t bestRssi = 0;
   uint16_t scanFrequency = frequency;
   uint16_t bestFrequency = frequency;
-  uint8_t clickType;
-  uint8_t rssiDisplayValue;
 
   // Draw screen frame etc
   drawScannerScreen();
@@ -500,7 +501,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
 //* function: autoScan
 //******************************************************************************
 uint16_t autoScan( uint16_t frequency ) {
-  uint8_t i;
+  uint8_t  i;
   uint16_t scanRssi = 0;
   uint16_t bestRssi = 0;
   uint16_t scanFrequency;
@@ -609,7 +610,7 @@ char *longNameOfChannel(uint8_t channel, char *name)
 
 //******************************************************************************
 //* function: getVoltage
-//*         : returns battery voltage as an unsigned integer.
+//*         : returns battery voltage as a uint16_t integer
 //*         : The value is multiplied with 10, 12volts => 120, 7.2Volts => 72
 //*
 //*         : Measured voltage values:
@@ -678,7 +679,7 @@ void batteryMeter( void )
 //* function: updateSoftPositions
 //******************************************************************************
 void updateSoftPositions( void ) {
-  unsigned char i;
+  uint8_t i;
 
   // Mark blocked channels in the softPositions array
   for (i = 0; i < 48; i++)
@@ -839,7 +840,7 @@ void setOptions()
 //*         : Cycles through alarms, regardless of alarm settings
 //******************************************************************************
 void testAlarm( void ) {
-  unsigned char i;
+  uint8_t i;
 
   while (getClickType(BUTTON_PIN) == NO_CLICK) {
     for (i = 0; i < 3; i++) {
