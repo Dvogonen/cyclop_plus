@@ -213,35 +213,6 @@ void setup()
   if (options[SHOW_STARTSCREEN_OPTION])
     drawStartScreen();
 
-  // Mark blocked channels in the softPositions array
-  for (i = 0; i < 48; i++)
-    softPositions[i] = positions[i];
-
-  if (!options[A_BAND_OPTION]) {
-    for (i = 0; i < 8; i++)
-      softPositions[getReversePosition( i )] = 255;
-  }
-  if (!options[B_BAND_OPTION]) {
-    for (i = 8; i < 16; i++)
-      softPositions[getReversePosition( i )] = 255;
-  }
-  if (!options[E_BAND_OPTION]) {
-    for (i = 16; i < 24; i++)
-      softPositions[getReversePosition( i )] = 255;
-  }
-  if (!options[F_BAND_OPTION]) {
-    for (i = 24; i < 32; i++)
-      softPositions[getReversePosition( i )] = 255;
-  }
-  if (!options[R_BAND_OPTION]) {
-    for (i = 32; i < 40; i++)
-      softPositions[getReversePosition( i )] = 255;
-  }
-  if (!options[L_BAND_OPTION]) {
-    for (i = 40; i < 48; i++)
-      softPositions[getReversePosition( i )] = 255;
-  }
-
   // Wait at least the delay time before entering screen save mode
   saveScreenTimer = millis() + SAVE_SCREEN_DELAY_MS;
 }
@@ -341,26 +312,6 @@ void loop()
   }
   else
     analogWrite( ALARM_PIN, 0 );
-}
-
-//******************************************************************************
-//* function: resetOptions
-//*         : Resets all configuration settings to their default values
-//******************************************************************************
-void resetOptions(void) {
-  options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
-  options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
-  options[ALARM_LEVEL_OPTION]      = ALARM_LEVEL_DEFAULT;
-  options[BATTERY_TYPE_OPTION]     = BATTERY_TYPE_DEFAULT;
-  options[BATTERY_CALIB_OPTION]    = BATTERY_CALIB_DEFAULT;
-  options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
-  options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
-  options[A_BAND_OPTION]           = A_BAND_DEFAULT;
-  options[B_BAND_OPTION]           = B_BAND_DEFAULT;
-  options[E_BAND_OPTION]           = E_BAND_DEFAULT;
-  options[F_BAND_OPTION]           = F_BAND_DEFAULT;
-  options[R_BAND_OPTION]           = R_BAND_DEFAULT;
-  options[L_BAND_OPTION]           = L_BAND_DEFAULT;
 }
 
 //******************************************************************************
@@ -519,7 +470,7 @@ uint16_t graphicScanner( uint16_t frequency ) {
   // Draw screen frame etc
   drawScannerScreen();
 
-  while ((clickType = getClickType(BUTTON_PIN)) == NO_CLICK) {
+  while (digitalRead(BUTTON_PIN) != BUTTON_PRESSED) {
     scanFrequency += SCANNING_STEP;
     if (scanFrequency > FREQUENCY_MAX)
       scanFrequency = FREQUENCY_MIN;
@@ -530,8 +481,8 @@ uint16_t graphicScanner( uint16_t frequency ) {
     updateScannerScreen(100 - ((FREQUENCY_MAX - scanFrequency) / SCANNING_STEP), rssiDisplayValue );
   }
   // Fine tuning
-  scanFrequency = scanFrequency - 20;
-  for (i = 0; i < 20; i++, scanFrequency += 2) {
+  scanFrequency = scanFrequency - SCANNING_STEP * 4;
+  for (i = 0; i < SCANNING_STEP * 4; i++, scanFrequency += 2) {
     receiver.setFrequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
@@ -576,9 +527,9 @@ uint16_t autoScan( uint16_t frequency ) {
     }
   }
   // Fine tuning
-  scanFrequency = bestFrequency - 20;
+  scanFrequency = bestFrequency - SCANNING_STEP * 4;
   bestRssi = 0;
-  for (i = 0; i < 20; i++, scanFrequency += 2) {
+  for (i = 0; i < SCANNING_STEP * 4; i++, scanFrequency += 2) {
     receiver.setFrequency(scanFrequency);
     delay( RSSI_STABILITY_DELAY_MS );
     scanRssi = averageAnalogRead(RSSI_PIN);
@@ -724,6 +675,69 @@ void batteryMeter( void )
 }
 
 //******************************************************************************
+//* function: updateSoftPositions
+//******************************************************************************
+void updateSoftPositions( void ) {
+  unsigned char i;
+
+  // Mark blocked channels in the softPositions array
+  for (i = 0; i < 48; i++)
+    softPositions[i] = positions[i];
+
+  if (!options[A_BAND_OPTION]) {
+    for (i = 0; i < 8; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[B_BAND_OPTION]) {
+    for (i = 8; i < 16; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[E_BAND_OPTION]) {
+    for (i = 16; i < 24; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[F_BAND_OPTION]) {
+    for (i = 24; i < 32; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[R_BAND_OPTION]) {
+    for (i = 32; i < 40; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+  if (!options[L_BAND_OPTION]) {
+    for (i = 40; i < 48; i++)
+      softPositions[getReversePosition( i )] = 255;
+  }
+}
+
+//******************************************************************************
+//* function: resetOptions
+//*         : Resets all configuration settings to their default values
+//******************************************************************************
+
+//******************************************************************************
+//* function: resetOptions
+//*         : Resets all configuration settings to their default values
+//******************************************************************************
+void resetOptions(void) {
+  options[FLIP_SCREEN_OPTION]      = FLIP_SCREEN_DEFAULT;
+  options[BATTERY_ALARM_OPTION]    = BATTERY_ALARM_DEFAULT;
+  options[ALARM_LEVEL_OPTION]      = ALARM_LEVEL_DEFAULT;
+  options[BATTERY_TYPE_OPTION]     = BATTERY_TYPE_DEFAULT;
+  options[BATTERY_CALIB_OPTION]    = BATTERY_CALIB_DEFAULT;
+  options[SHOW_STARTSCREEN_OPTION] = SHOW_STARTSCREEN_DEFAULT;
+  options[SAVE_SCREEN_OPTION]      = SAVE_SCREEN_DEFAULT;
+  options[A_BAND_OPTION]           = A_BAND_DEFAULT;
+  options[B_BAND_OPTION]           = B_BAND_DEFAULT;
+  options[E_BAND_OPTION]           = E_BAND_DEFAULT;
+  options[F_BAND_OPTION]           = F_BAND_DEFAULT;
+  options[R_BAND_OPTION]           = R_BAND_DEFAULT;
+  options[L_BAND_OPTION]           = L_BAND_DEFAULT;
+
+  updateSoftPositions();
+}
+
+//******************************************************************************
 //* function: setOptions
 //******************************************************************************
 void setOptions()
@@ -817,6 +831,7 @@ void setOptions()
           break;
       }
   }
+  updateSoftPositions();
 }
 
 //******************************************************************************
@@ -824,21 +839,16 @@ void setOptions()
 //*         : Cycles through alarms, regardless of alarm settings
 //******************************************************************************
 void testAlarm( void ) {
-  uint8_t i;
+  unsigned char i;
 
-  for ( i = 0; i < 3; i++) {
-    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MIN_ON);
-    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MIN_OFF);
+  while (getClickType(BUTTON_PIN) == NO_CLICK) {
+    for (i = 0; i < 3; i++) {
+      analogWrite( ALARM_PIN, 1 << options[ALARM_LEVEL_OPTION] );
+      delay(ALARM_MAX_ON);
+      analogWrite( ALARM_PIN, 0 );
+      delay(ALARM_MAX_OFF);
+    }
   }
-  for (i = 0; i < 3; i++) {
-    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MED_ON);
-    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MED_OFF);
-  }
-  for (i = 0; i < 3; i++) {
-    analogWrite( ALARM_PIN, 32 ); delay(ALARM_MAX_ON);
-    analogWrite( ALARM_PIN, 0 );  delay(ALARM_MAX_OFF);
-  }
-  analogWrite( ALARM_PIN, 0 );
 }
 
 //******************************************************************************
