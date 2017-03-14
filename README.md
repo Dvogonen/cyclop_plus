@@ -1,6 +1,4 @@
 #CYCLOP+ v1.6
-
-###Introduction and Functions
 The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second major function is to add support for an external OLED display that information can be presented to the user.
 The third is to add a graphical scanner for the complete 5.8 GHz band. This includes the low channels on the low band.
