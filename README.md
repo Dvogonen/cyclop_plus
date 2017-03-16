@@ -1,13 +1,13 @@
-#CYCLOP+ v1.6
+# CYCLOP+ v1.6
 
-###Introduction and Functions
+### Introduction and Functions
 The major function of this project (CYCLOP+) is to add the ability to manually select channels using only the standard button on the receiver of the Quanum Cyclops.
 The second major function is to add support for an external OLED display that information can be presented to the user.
 The third is to add a graphical scanner for the complete 5.8 GHz band. This includes the low channels on the low band.
 Installation of an OLED display was optional in version 1.5 and lower. Due to the added complexity of the user interface, an OLED display is a requirement to use version 1.6 and later of CYCLOP+.
 A battery warning buzzer may be attached. That modification is optional.
 
-###Version History
+### Version History
 * 1.6 Favourite band selection, Improved button timing, menu based interface - WORK IN PROGRESS - NOT YET RELEASED
 * 1.5 Full 48 channel Low Band support added. One click wakeup. Alarm level configuration. 2017-03-10
 * 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
@@ -17,7 +17,7 @@ A battery warning buzzer may be attached. That modification is optional.
 * 1.0 Initial dev version, not released
 
 
-###Informative Links
+### Informative Links
 This is a short video introduction to the functionality (of v1.2):
 https://youtu.be/mDhL1hS-EHk
 
@@ -27,8 +27,8 @@ https://youtu.be/C4XgYwpNXS0
 This is an installation description written by RadianceNL. It is much more detailed than the description below.
 https://radiance-fpv.nl/cyclop-plus-firmware-mod/
 
-#Installation
-###Solder programming pins to the PCB(optional)
+# Installation
+### Solder programming pins to the PCB(optional)
 - Solder a 2x3 block of pin headers into the holes for the ICSP port.
 If you do not want to solder anything you can program the board by temporarily pushing programming pins into the PCB ICSP connector holes while you program the board.
 The holes for the ICSP connector is found just to the right of the button switch.
@@ -36,7 +36,7 @@ The pins should point upwards on the same side as the receiver tin can is instal
 ![ICSP pin header](/images/pcb_icsp.jpg)
 The top left pin is VCC.
 
-###Attach an OLED display
+### Attach an OLED display
 - Solder a SSD1306 or SH1106 OLED 128x64 display with I2C interface to the I2C pins (Ground, VCC, SCL, SDA).
 
 ![128x64 OLED with I2C interface](/images/oled.jpg)
@@ -70,7 +70,7 @@ Either buy another OLED or install a separate voltage regulator for the OLED.
 ![ICSP pin header](/images/pcb_33v_display.jpg)
 Please note that if you instead want to connect to solder pads on the back of the PCB, there are two labeled SCL1 and SDA1. These are mislabeled. They should be swapped.
 
-##Attach a low battery alarm buzzer(optional)
+## Attach a low battery alarm buzzer(optional)
 Use a 5 volt piezzo buzzer. It does not matter if it is an active piezo buzzer or a passive piezo speaker.
 A piezo buzzer looks like this this:
 ![Buzzer Example](/images/buzzer.jpg)
@@ -80,7 +80,7 @@ A piezo buzzer looks like this this:
 - Enable the Low Battery Alarm option in the configuration menu.
 ![Alarm Speaker Connection](/images/pcb_buzzer.jpg)
 
-###Build CYCLOP+ (optional)
+### Build CYCLOP+ (optional)
 - The project is built using the Arduino development environment.  Download the Arduino development environment from www.arduino.cc. Arduino 1.6.9 and 1.6.12 have been used successfully. WARNING There is a problem with the latest Arduino versions that results in a segmentation error when compiling the librrary for SH1106. This was discovered using Arduino 1.8.1. Use a slightly older version of the IDE until the problem has been fixed.
 - Install the development environment.
 - Download the CYCLOP+ source code from GitHub.
@@ -91,7 +91,7 @@ A piezo buzzer looks like this this:
 - Specify "Arduino Pro or Pro Mini" as board. Then select "Atmega 328 (3.3 volt, 8 MHz)" as processor. These settings are found in the Arduino IDE "Tool" menu.
 - Build the project by pressing the v icon in the upper left corner of the Arduino window.
 
-###Load CYCLOP+
+### Load CYCLOP+
 - Build CYCLOP+ or download the latest stable version of CYCLOP+.
 The SSD1306 version firmware file is called cyclop_plus.hex and can be downloaded via this link: https://raw.githubusercontent.com/Dvogonen/cyclop_plus/master/cyclop_plus_v0106.hex (right-click and download)
 
@@ -134,7 +134,7 @@ Execute a write.
 When it goes black again the programming is done and the board can be mounted in the googles.
 
 
-###Use CYCLOP+
+### Use CYCLOP+
 - A single click jumps up in frequency to the closest higher channel among the 48 available.
 - A double click jumps down in frequency.
 - A long click (longer than 0.5 seconds) brings up a menu.
@@ -143,13 +143,13 @@ When it goes black again the programming is done and the board can be mounted in
 - Auto Scanner: Performs an autoscan for the best channel, just like a single click does in the original firmware.
 - Graphical Scanner: Triggers a manual frequency scanner. The receiver will start cycling through all channels quickly. Click the button again to select a frequency.
 
-###Options Menu
+### Options Menu
 - Examples of configurable options: Screen flip (up or down), 3s battery meter, 2s battery meter, screen saver, low level battery alarm, alarm sound level.
 - Enabling the screen saver option makes the display go out 10 seconds after the last button press. Use this if the display is mounted inside the visor.
 - It is possible to turn the use of individual bands On or Off. If a band is turned Off it will not be available for manual stepping. The idea is to be able to limit frequency stepping to the band you are using and ignore all other frequencies. All frequencies are however available for both Grahical Scanning and Auto Scanning. The exception to this rule is the Low Band. This band takes up as much bandwidth as all the others combined. If the Low Band is turned Off, the scan functions for it is also turned Off. The reason is that this doubles the resolution of frequency scans. 
 - The settings are saved when the Exit option is selected. All changes are lost if the battery is disconnected before Exit has been selected.
 
-###Words of Warning
+### Words of Warning
 Use of the FW is on your own risk.
 You have to dismantle the googles to program the receiver with a so called ISP (alternatively called ICSP) programmer.
 It is naturally possible to destroy the receiver electronics if you connect VCC (the +3.3 volt wire coming from the programmer) to the wrong pin.
@@ -158,7 +158,7 @@ Always double check that VCC is connected correctly before you turn on power.
 
 It is possible to "Brick" the processor in your receiver by tampering with the so called processor fuses. There is no need to change any fuses from their original values (0xE2 0xD9 0x07). Leave them alone.
 
-###License
+### License
 The MIT License (MIT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
