@@ -9,7 +9,7 @@ Installation of an OLED display was optional in version 1.5 and lower. Due to th
 A battery warning buzzer may be attached. That modification is optional.
 
 ### Version History
-* 1.6 Favourite band selection, Improved button timing, menu based interface - WORK IN PROGRESS - NOT YET RELEASED
+* 1.6 Favourite band selection, Improved button timing, menu based interface - Final Release
 * 1.5 Full 48 channel Low Band support added. One click wakeup. Alarm level configuration. 2017-03-10
 * 1.4 SH1106 OLED support added. Button timing improved. Low battery alarm added. 2016-08-20
 * 1.3 Configration options added. Screensaver mode added. Battery meter added. 2016-07-15
